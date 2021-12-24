@@ -17,12 +17,12 @@ export GOOGLE_APPLICATION_CREDENTIALS = "/path/to/your/client_secret.json"
 Running locally:
 
 ```bash
-go run .
+go run /services/photographer
 ```
 
 Running with docker:
 
 ```bash
-docker build . -t photographer
+docker build -f photographer.Dockerfile . -t photographer
 docker run photographer
 ```
