@@ -1,11 +1,11 @@
-package main
+package util
 
 import (
 	"os"
 	"strconv"
 )
 
-func getEnvInt(key string, defaultValue int) int {
+func GetEnvInt(key string, defaultValue int) int {
 	stringValue := os.Getenv(key)
 	if stringValue == "" {
 		return defaultValue

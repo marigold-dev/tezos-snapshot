@@ -5,7 +5,7 @@ COPY go.sum ./
 RUN go mod download
 COPY ./cmd ./cmd
 COPY ./pkg ./pkg
-RUN cd cmd/photographer && go build -o /main
+RUN cd cmd/retriever && go build -o /main
 
 FROM tezos/tezos:master
 RUN sudo apk add curl lz4 xz jq

@@ -6,11 +6,12 @@ import (
 	"os"
 
 	"cloud.google.com/go/storage"
+	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 )
 
 func main() {
 	ctx := context.Background()
-	maxDays := getEnvInt("MAX_DAYS", 7)
+	maxDays := util.GetEnvInt("MAX_DAYS", 7)
 	bucketName := os.Getenv("BUCKET_NAME")
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
@@ -22,13 +23,12 @@ func main() {
 	}
 	defer client.Close()
 
-	snapshotStorage := NewSnapshotStorage(client, bucketName)
-	snapshotExec := NewSnapshotExec()
+	snapshotStorage := util.NewSnapshotStorage(client, bucketName)
 
-	snapshotExec.CreateSnapshot(false)
-	snapshotExec.CreateSnapshot(true)
+	createSnapshot(false)
+	createSnapshot(true)
 
-	snapshotfileNameFull, snapshotfileNamesRolling := snapshotExec.GetSnapshotsNames()
+	snapshotfileNameFull, snapshotfileNamesRolling := getSnapshotsNames()
 
 	snapshotStorage.EphemeralUpload(ctx, snapshotfileNameFull, false)
 	snapshotStorage.EphemeralUpload(ctx, snapshotfileNamesRolling, true)

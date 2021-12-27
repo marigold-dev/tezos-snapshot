@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -41,6 +42,66 @@ func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string, 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []SnapshotItem {
+
+	items := []SnapshotItem{}
+	it := s.client.Bucket(s.bucketName).Objects(ctx, &storage.Query{})
+
+	for {
+		obj, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatalf("listBucket: unable to list bucket %q: %v \n", s.bucketName, err)
+		}
+
+		isFile, folderName := isNotFolder(obj)
+		layout := "2006-01-02"
+		date, err := time.Parse(layout, folderName)
+
+		if !isFile {
+			continue
+		}
+
+		network := NetworkType(MAINNET)
+
+		if strings.Contains(obj.Name, "TESTNET") {
+			network = NetworkType(TESTNET)
+		}
+
+		snapshotType := SnapshotType(FULL)
+
+		if strings.Contains(obj.Name, "rolling") {
+			snapshotType = SnapshotType(ROLLING)
+		}
+
+		splited := strings.Split(obj.Name, "-")
+
+		blocklevel := splited[len(splited)-1]
+		blockhash := splited[len(splited)-2]
+
+		item := SnapshotItem{
+			FileName:     obj.Name,
+			Network:      network,
+			Date:         date,
+			SnapshotType: snapshotType,
+			Link:         obj.MediaLink,
+			Blockhash:    blockhash,
+			Blocklevel:   blocklevel,
+		}
+
+		items = append(items, item)
+	}
+
+	// Order by date
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Date.After(items[j].Date)
+	})
+
+	return items
 }
 
 func (s *SnapshotStorage) DeleteOldSnapshots(ctx context.Context, maxDays int) {
@@ -127,4 +188,13 @@ func (s *SnapshotStorage) deleteFile(ctx context.Context, maxDays int, obj *stor
 		fmt.Printf("%q object deleted. \n", obj.Name)
 	}
 	return nil
+}
+
+func isNotFolder(file *storage.ObjectAttrs) (bool, string) {
+	splittedPaths := strings.Split(file.Name, "/")
+	if len(splittedPaths) > 0 {
+		return false, ""
+	}
+
+	return (len(splittedPaths) == 2 && (splittedPaths[1] != "")), splittedPaths[1]
 }

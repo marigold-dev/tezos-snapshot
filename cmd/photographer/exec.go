@@ -10,14 +10,7 @@ import (
 	"strings"
 )
 
-type SnapshotExec struct {
-}
-
-func NewSnapshotExec() *SnapshotExec {
-	return &SnapshotExec{}
-}
-
-func (s *SnapshotExec) CreateSnapshot(rolling bool) {
+func createSnapshot(rolling bool) {
 	bin := "/usr/local/bin/tezos-node"
 
 	args := []string{"snapshot", "export", "--data-dir", "/var/run/tezos/node/data"}
@@ -36,7 +29,7 @@ func (s *SnapshotExec) CreateSnapshot(rolling bool) {
 	}
 }
 
-func (s *SnapshotExec) GetSnapshotsNames() (string, string) {
+func getSnapshotsNames() (string, string) {
 	fmt.Println("Getting snapshot names.")
 	var errBuf, outBuf bytes.Buffer
 	cmd := exec.Command("/bin/ls", "-1a")
