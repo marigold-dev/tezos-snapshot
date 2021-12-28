@@ -1,48 +1,60 @@
 package main
 
 import (
-	"encoding/json"
+	"net"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/marigold-dev/tezos-snapshot/pkg/util"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 	"github.com/patrickmn/go-cache"
 )
 
 func main() {
 	goCache := cache.New(12*time.Hour, 12*time.Hour)
 	bucketName := os.Getenv("BUCKET_NAME")
+	timeout := time.Duration(5) * time.Second
+	transport := &http.Transport{
+		ResponseHeaderTimeout: timeout,
+		Dial: func(network, addr string) (net.Conn, error) {
+			return net.DialTimeout(network, addr, timeout)
+		},
+		DisableKeepAlives: true,
+	}
+	client := &http.Client{
+		Transport: transport,
+	}
 	e := echo.New()
 
-	e.GET("/items", func(c echo.Context) error {
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	downloadableHandlerBuilder := func(network snapshot.NetworkType) func(c echo.Context) error {
+		return func(c echo.Context) error {
+			snapshotType := snapshot.ROLLING
+			if c.Param("type") == "full" {
+				snapshotType = snapshot.FULL
+			}
+
+			snapshot, err := getNewestSnapshot(c.Request().Context(), goCache, bucketName, network, snapshotType)
+			if err != nil {
+				return err
+			}
+
+			return streamFile(c, client, snapshot.FileName, snapshot.PublicURL)
+		}
+	}
+
+	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET))
+	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET))
+	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET))
+	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET))
+	e.GET("/", func(c echo.Context) error {
 		items := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
-
-		data, err := json.Marshal(items)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(http.StatusOK, data)
-	})
-
-	e.GET("/mainnet", func(c echo.Context) error {
-		publicURL, err := getNewestSnapshotsPublicURL(c.Request().Context(), goCache, bucketName, util.MAINNET)
-		if err != nil {
-			return err
-		}
-
-		return c.String(http.StatusOK, publicURL)
-	})
-
-	e.GET("/testnet", func(c echo.Context) error {
-		publicURL, err := getNewestSnapshotsPublicURL(c.Request().Context(), goCache, bucketName, util.TESTNET)
-		if err != nil {
-			return err
-		}
-
-		return c.String(http.StatusOK, publicURL)
+		return c.JSON(http.StatusOK, items)
 	})
 
 	e.Logger.Fatal(e.Start(":1323"))

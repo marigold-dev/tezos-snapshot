@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 	"google.golang.org/api/iterator"
 )
 
@@ -44,9 +45,9 @@ func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string, 
 	}
 }
 
-func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []SnapshotItem {
+func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.SnapshotItem {
 
-	items := []SnapshotItem{}
+	items := []snapshot.SnapshotItem{}
 	it := s.client.Bucket(s.bucketName).Objects(ctx, &storage.Query{})
 
 	for {
@@ -58,24 +59,25 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []SnapshotItem {
 			log.Fatalf("listBucket: unable to list bucket %q: %v \n", s.bucketName, err)
 		}
 
-		isFile, folderName := isNotFolder(obj)
-		layout := "2006-01-02"
+		isFile, folderName := isFile(obj)
+
+		layout := "2006.01.02"
 		date, err := time.Parse(layout, folderName)
 
 		if !isFile {
 			continue
 		}
 
-		network := NetworkType(MAINNET)
+		network := snapshot.NetworkType(snapshot.TESTNET)
 
-		if strings.Contains(obj.Name, "TESTNET") {
-			network = NetworkType(TESTNET)
+		if strings.Contains(obj.Name, "MAINNET") {
+			network = snapshot.NetworkType(snapshot.MAINNET)
 		}
 
-		snapshotType := SnapshotType(FULL)
+		snapshotType := snapshot.SnapshotType(snapshot.FULL)
 
 		if strings.Contains(obj.Name, "rolling") {
-			snapshotType = SnapshotType(ROLLING)
+			snapshotType = snapshot.SnapshotType(snapshot.ROLLING)
 		}
 
 		splited := strings.Split(obj.Name, "-")
@@ -83,12 +85,12 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []SnapshotItem {
 		blocklevel := splited[len(splited)-1]
 		blockhash := splited[len(splited)-2]
 
-		item := SnapshotItem{
+		item := snapshot.SnapshotItem{
 			FileName:     obj.Name,
 			Network:      network,
 			Date:         date,
 			SnapshotType: snapshotType,
-			Link:         obj.MediaLink,
+			PublicURL:    obj.MediaLink,
 			Blockhash:    blockhash,
 			Blocklevel:   blocklevel,
 		}
@@ -190,11 +192,11 @@ func (s *SnapshotStorage) deleteFile(ctx context.Context, maxDays int, obj *stor
 	return nil
 }
 
-func isNotFolder(file *storage.ObjectAttrs) (bool, string) {
+func isFile(file *storage.ObjectAttrs) (bool, string) {
 	splittedPaths := strings.Split(file.Name, "/")
-	if len(splittedPaths) > 0 {
+	if len(splittedPaths) < 2 {
 		return false, ""
 	}
 
-	return (len(splittedPaths) == 2 && (splittedPaths[1] != "")), splittedPaths[1]
+	return (len(splittedPaths) == 2 && (splittedPaths[1] != "")), splittedPaths[0]
 }

@@ -1,4 +1,4 @@
-package util
+package snapshot
 
 import "time"
 
@@ -9,7 +9,7 @@ type SnapshotItem struct {
 	SnapshotType SnapshotType
 	Blockhash    string
 	Blocklevel   string
-	Link         string
+	PublicURL    string
 }
 
 type SnapshotType string
