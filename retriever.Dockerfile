@@ -10,6 +10,6 @@ RUN cd cmd/retriever && go build -o /main
 FROM tezos/tezos:master
 RUN sudo apk add curl lz4 xz jq
 COPY --from=0 /main ./
-EXPOSE 1323
+EXPOSE 8080
 ENTRYPOINT ["./main"]
 CMD [""]
