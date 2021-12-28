@@ -56,6 +56,9 @@ func main() {
 		items := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
 		return c.JSON(http.StatusOK, items)
 	})
+	e.GET("/health", func(c echo.Context) error {
+		return c.String(http.StatusOK, "UP")
+	})
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
