@@ -63,6 +63,8 @@ docker run retriever
 
 ## Endpoints
 
-* **/items** to return json content with all snapshots
-* **/mainnet** to return mainnet downloadable publicURL
-* **/testnet** to return testnet downloadable publicURL
+* **/** to return json content with all snapshots
+* **/mainnet** to return the last mainnet rolling snapshot
+* **/mainnet/full** to return the last mainnet full snapshot
+* **/testnet** to return the last testnet rolling snapshot
+* **/testnet/full** to return the last testnet full snapshot
