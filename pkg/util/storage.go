@@ -59,7 +59,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			log.Fatalf("listBucket: unable to list bucket %q: %v \n", s.bucketName, err)
 		}
 
-		isFile, folderName := isFile(obj)
+		isFile, folderName, fileName := isFile(obj)
 
 		layout := "2006.01.02"
 		date, err := time.Parse(layout, folderName)
@@ -80,13 +80,13 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			snapshotType = snapshot.SnapshotType(snapshot.ROLLING)
 		}
 
-		splited := strings.Split(obj.Name, "-")
+		splitedByHyphen := strings.Split(obj.Name, "-")
 
-		blocklevel := splited[len(splited)-1]
-		blockhash := splited[len(splited)-2]
+		blocklevel := splitedByHyphen[len(splitedByHyphen)-1]
+		blockhash := splitedByHyphen[len(splitedByHyphen)-2]
 
 		item := snapshot.SnapshotItem{
-			FileName:     obj.Name,
+			FileName:     fileName,
 			Network:      network,
 			Date:         date,
 			SnapshotType: snapshotType,
@@ -192,11 +192,11 @@ func (s *SnapshotStorage) deleteFile(ctx context.Context, maxDays int, obj *stor
 	return nil
 }
 
-func isFile(file *storage.ObjectAttrs) (bool, string) {
-	splittedPaths := strings.Split(file.Name, "/")
-	if len(splittedPaths) < 2 {
-		return false, ""
+func isFile(file *storage.ObjectAttrs) (bool, string, string) {
+	splitedBySlash := strings.Split(file.Name, "/")
+	if len(splitedBySlash) < 2 {
+		return false, "", ""
 	}
 
-	return (len(splittedPaths) == 2 && (splittedPaths[1] != "")), splittedPaths[0]
+	return (len(splitedBySlash) == 2 && (splitedBySlash[1] != "")), splitedBySlash[0], splitedBySlash[1]
 }
