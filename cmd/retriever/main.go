@@ -31,6 +31,7 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 
 	downloadableHandlerBuilder := func(network snapshot.NetworkType) func(c echo.Context) error {
 		return func(c echo.Context) error {
