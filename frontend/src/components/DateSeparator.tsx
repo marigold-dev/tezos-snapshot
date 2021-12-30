@@ -8,6 +8,7 @@ export default function DateSeparator (props: { snapshot: Snapshot; }) {
       color: '#eb3448',
       marginBottom: '10px',
       textAlign: 'right',
+      fontSize: '2.0vh',
       fontStyle: 'italic'
     }}> {new Date(props.snapshot.Date).toISOString().split('T')[0]}
     </div>

@@ -12,7 +12,8 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
   const theme = useTheme()
   return (
     <Card sx={{
-      minWidth: '80vh',
+      width: '80vw',
+      maxWidth: '800px',
       backgroundColor: theme.palette.primary.main,
       color: theme.palette.text.primary,
       boxShadow: 'none',
@@ -21,10 +22,10 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
       borderRadius: '0px'
     }}>
       <CardContent>
-        <Typography sx={{ fontSize: 14, display: 'flex' }} gutterBottom>
+        <Typography sx={{ fontSize: '14px', display: 'flex' }} gutterBottom>
           <span style={{ flex: '1' }}>{props.snapshot.SnapshotType} - {props.snapshot.Network}</span>
         </Typography>
-        <Typography style={{ fontWeight: 'bold', fontSize: '18px' }} component="div">
+        <Typography style={{ fontWeight: 'bold', fontSize: '2.3vh', overflowWrap: 'break-word' }} component="div">
           {props.snapshot.Blockhash}
         </Typography>
       </CardContent>

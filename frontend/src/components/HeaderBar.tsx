@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
@@ -13,6 +13,19 @@ import Brightness7Icon from '@mui/icons-material/Brightness7'
 import { ColorModeContext } from '../ThemeContext'
 
 export default function HeaderBar () {
+  const [width, setWidth] = useState<number>(window.innerWidth)
+
+  function handleWindowSizeChange () {
+    setWidth(window.innerWidth)
+  }
+  useEffect(() => {
+    window.addEventListener('resize', handleWindowSizeChange)
+    return () => {
+      window.removeEventListener('resize', handleWindowSizeChange)
+    }
+  }, [])
+
+  const isMobile = () => width <= 860
   const theme = useTheme()
   const colorMode = React.useContext(ColorModeContext)
 
@@ -20,45 +33,49 @@ export default function HeaderBar () {
     height: '66px',
     borderColor: 'white',
     border: 'solid',
-    borderWidth: '1px'
+    borderWidth: '1px',
+    justifyContent: 'center'
   }}>
     <Toolbar>
+        <Link style={{ color: theme.palette.text.primary, flexGrow: isMobile() ? 1 : 0, fontFamily: '"Roboto","Helvetica","Arial",sans-serif', display: 'flex', alignItems: 'center' }} href="https://marigold.dev" underline="none">
+          <img style={{ marginRight: '10px' }} src="https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png" alt="Marigold Logo" width="24" height="24"></img>
 
-      <Link style={{ color: theme.palette.text.primary, paddingRight: '10px', fontFamily: '"Roboto","Helvetica","Arial",sans-serif', display: 'flex', alignItems: 'center' }} href="https://marigold.dev" underline="none">
-        <img style={{ marginRight: '10px' }} src="https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png" alt="Marigold Logo" width="24" height="24"></img>
+        <Typography style={{ marginRight: isMobile() ? '0px' : '24px' }} variant="h6" color="inherit" noWrap>
+          MARIGOLD {isMobile() && <span> SNAPSHOTS </span>}
+          </Typography>
+        </Link>
 
-        <Typography style={{ marginRight: '24px' }} variant="h6" color="inherit" noWrap>
-          MARIGOLD
-        </Typography>
-      </Link>
+      {!isMobile() && <Separator></Separator> }
 
-      <Separator></Separator>
-
-      <Box style={{
+      {!isMobile() && <Box style={{
         paddingLeft: '10px', justifyContent: 'left'
       }} sx={{ flexGrow: 1 }}>
         <Typography style={{ color: theme.palette.text.primary, marginLeft: '25px' }} variant="h6" color="inherit" noWrap>
           TEZOS SNAPSHOTS
         </Typography>
       </Box>
+      }
 
-      <Separator></Separator>
-      <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/testnet/full">
-        FULL TESTNET
-      </SnapshotLink>
-      <Separator></Separator>
-      <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/testnet">
-        ROLLING TESTNET
-      </SnapshotLink>
-      <Separator></Separator>
-      <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/mainnet/full">
-        FULL MAINNET
-      </SnapshotLink>
-      <Separator></Separator>
-      <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/mainnet">
-        ROLLING MAINNET
-      </SnapshotLink>
-      <Separator></Separator>
+      {!isMobile() &&
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <Separator></Separator>
+          <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/testnet/full">
+            FULL TESTNET
+          </SnapshotLink>
+          <Separator></Separator>
+          <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/testnet">
+            ROLLING TESTNET
+          </SnapshotLink>
+          <Separator></Separator>
+          <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/mainnet/full">
+            FULL MAINNET
+          </SnapshotLink>
+          <Separator></Separator>
+          <SnapshotLink url="https://snapshot-api.gcp.marigold.dev/mainnet">
+            ROLLING MAINNET
+          </SnapshotLink>
+          <Separator></Separator>
+        </span>}
 
       <IconButton sx={{ ml: 1, marginLeft: '24px' }} onClick={colorMode.toggleColorMode} color="inherit">
         {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
