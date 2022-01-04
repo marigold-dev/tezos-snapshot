@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	goCache := cache.New(12*time.Hour, 12*time.Hour)
+	goCache := cache.New(1*time.Hour, 1*time.Hour)
 	bucketName := os.Getenv("BUCKET_NAME")
 	timeout := time.Duration(5) * time.Second
 	transport := &http.Transport{
