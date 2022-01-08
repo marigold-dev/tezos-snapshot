@@ -24,5 +24,5 @@ func GetEnvBool(key string, defaultValue bool) bool {
 		return defaultValue
 	}
 
-	return strings.ToLower(key) == "true"
+	return strings.Contains(strings.ToLower(key), "true")
 }

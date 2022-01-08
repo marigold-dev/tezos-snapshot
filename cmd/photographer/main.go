@@ -13,7 +13,7 @@ func main() {
 	ctx := context.Background()
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
-	isRollingSnapshot := util.GetEnvBool("ROLLING", true)
+	isRollingSnapshot := util.GetEnvBool("ROLLING", false)
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
