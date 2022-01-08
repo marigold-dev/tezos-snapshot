@@ -3,6 +3,7 @@ package util
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 func GetEnvInt(key string, defaultValue int) int {
@@ -15,4 +16,13 @@ func GetEnvInt(key string, defaultValue int) int {
 		return defaultValue
 	}
 	return intValue
+}
+
+func GetEnvBool(key string, defaultValue bool) bool {
+	stringValue := os.Getenv(key)
+	if stringValue == "" {
+		return defaultValue
+	}
+
+	return strings.ToLower(key) == "true"
 }

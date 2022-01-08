@@ -11,8 +11,10 @@ import (
 
 func main() {
 	ctx := context.Background()
-	maxDays := util.GetEnvInt("MAX_DAYS", 7)
 	bucketName := os.Getenv("BUCKET_NAME")
+	maxDays := util.GetEnvInt("MAX_DAYS", 7)
+	isRollingSnapshot := util.GetEnvBool("ROLLING", true)
+
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
 	}
@@ -25,13 +27,15 @@ func main() {
 
 	snapshotStorage := util.NewSnapshotStorage(client, bucketName)
 
-	createSnapshot(false)
-	createSnapshot(true)
+	createSnapshot(isRollingSnapshot)
 
 	snapshotfileNameFull, snapshotfileNamesRolling := getSnapshotsNames()
 
-	snapshotStorage.EphemeralUpload(ctx, snapshotfileNameFull, false)
-	snapshotStorage.EphemeralUpload(ctx, snapshotfileNamesRolling, true)
+	if isRollingSnapshot {
+		snapshotStorage.EphemeralUpload(ctx, snapshotfileNamesRolling, isRollingSnapshot)
+	} else {
+		snapshotStorage.EphemeralUpload(ctx, snapshotfileNameFull, isRollingSnapshot)
+	}
 
 	snapshotStorage.DeleteOldSnapshots(ctx, maxDays)
 }
