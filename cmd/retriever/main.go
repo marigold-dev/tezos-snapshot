@@ -54,8 +54,25 @@ func main() {
 	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET))
 	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET))
 	e.GET("/", func(c echo.Context) error {
-		items := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
-		return c.JSON(http.StatusOK, items)
+		snapshots := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
+		snapshotsFromToday := []snapshot.SnapshotItem{}
+		responseSnapshot := []snapshot.SnapshotItem{}
+		now := time.Now()
+
+		for _, i := range snapshots {
+			if i.Date.YearDay() == now.YearDay() && i.Date.Year() == now.Year() {
+				snapshotsFromToday = append(snapshotsFromToday, i)
+			} else {
+				responseSnapshot = append(responseSnapshot, i)
+			}
+		}
+
+		// Only show today snapshots if we have all
+		if len(snapshotsFromToday) >= 4 {
+			responseSnapshot = append(snapshotsFromToday, responseSnapshot...)
+		}
+
+		return c.JSON(http.StatusOK, responseSnapshot)
 	})
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "UP")

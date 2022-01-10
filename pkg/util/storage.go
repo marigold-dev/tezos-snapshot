@@ -24,7 +24,7 @@ func NewSnapshotStorage(client *storage.Client, bucketName string) *SnapshotStor
 	return &SnapshotStorage{client: client, bucketName: bucketName}
 }
 
-func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string, rolling bool) {
+func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string) {
 	fmt.Printf("Opening snapshot file %q.", fileName)
 	snapshotFile, err := os.Open(fileName)
 	if err != nil {
@@ -63,17 +63,21 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 
 		layout := "2006.01.02"
 		date, err := time.Parse(layout, folderName)
+		if err != nil {
+			log.Fatalf("unable to parse date. %v \n", err)
+		}
 
 		if !isFile {
 			continue
 		}
 
 		network := snapshot.NetworkType(snapshot.TESTNET)
+		networkProtocol := strings.Split(strings.Split(fileName, "-")[0], "_")[1]
 
 		if strings.Contains(obj.Name, "MAINNET") {
 			network = snapshot.NetworkType(snapshot.MAINNET)
+			networkProtocol = string(network)
 		}
-
 		snapshotType := snapshot.SnapshotType(snapshot.FULL)
 
 		if strings.Contains(obj.Name, "rolling") {
@@ -86,13 +90,14 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 		blockhash := splitedByHyphen[len(splitedByHyphen)-2]
 
 		item := snapshot.SnapshotItem{
-			FileName:     fileName,
-			Network:      network,
-			Date:         date,
-			SnapshotType: snapshotType,
-			PublicURL:    obj.MediaLink,
-			Blockhash:    blockhash,
-			Blocklevel:   blocklevel,
+			FileName:        fileName,
+			Network:         network,
+			NetworkProtocol: networkProtocol,
+			Date:            date,
+			SnapshotType:    snapshotType,
+			PublicURL:       obj.MediaLink,
+			Blockhash:       blockhash,
+			Blocklevel:      blocklevel,
 		}
 
 		items = append(items, item)
@@ -133,7 +138,9 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 
 	fmt.Printf("Current Date is %q.\n", currentDate)
 
-	objectHandler := s.client.Bucket(s.bucketName).Object(currentDate + "/" + file.Name())
+	fileName := currentDate + "/" + file.Name()
+
+	objectHandler := s.client.Bucket(s.bucketName).Object(fileName)
 	writer := objectHandler.NewWriter(ctx)
 	if _, err := io.Copy(writer, file); err != nil {
 		fmt.Printf("Error Write Copy")

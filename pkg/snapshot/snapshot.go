@@ -3,13 +3,14 @@ package snapshot
 import "time"
 
 type SnapshotItem struct {
-	FileName     string
-	Network      NetworkType
-	Date         time.Time
-	SnapshotType SnapshotType
-	Blockhash    string
-	Blocklevel   string
-	PublicURL    string
+	FileName        string
+	Network         NetworkType
+	NetworkProtocol string
+	Date            time.Time
+	SnapshotType    SnapshotType
+	Blockhash       string
+	Blocklevel      string
+	PublicURL       string
 }
 
 type SnapshotType string

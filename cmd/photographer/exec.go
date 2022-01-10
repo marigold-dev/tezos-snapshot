@@ -29,7 +29,7 @@ func createSnapshot(rolling bool) {
 	}
 }
 
-func getSnapshotsNames() (string, string) {
+func getSnapshotNames(isRolling bool) string {
 	fmt.Println("Getting snapshot names.")
 	var errBuf, outBuf bytes.Buffer
 	cmd := exec.Command("/bin/ls", "-1a")
@@ -58,5 +58,9 @@ func getSnapshotsNames() (string, string) {
 	fmt.Printf("Full snapshot file is: %q. \n", full)
 	fmt.Printf("Rolling snapshot file is: %q. \n", rolling)
 
-	return full, rolling
+	if isRolling {
+		return rolling
+	}
+
+	return full
 }

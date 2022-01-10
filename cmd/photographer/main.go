@@ -29,13 +29,9 @@ func main() {
 
 	createSnapshot(isRollingSnapshot)
 
-	snapshotfileNameFull, snapshotfileNamesRolling := getSnapshotsNames()
+	snapshotfileName := getSnapshotNames(isRollingSnapshot)
 
-	if isRollingSnapshot {
-		snapshotStorage.EphemeralUpload(ctx, snapshotfileNamesRolling, isRollingSnapshot)
-	} else {
-		snapshotStorage.EphemeralUpload(ctx, snapshotfileNameFull, isRollingSnapshot)
-	}
+	snapshotStorage.EphemeralUpload(ctx, snapshotfileName)
 
 	snapshotStorage.DeleteOldSnapshots(ctx, maxDays)
 }
