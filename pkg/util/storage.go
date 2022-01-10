@@ -73,6 +73,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 
 		network := snapshot.NetworkType(snapshot.TESTNET)
 		networkProtocol := strings.Split(strings.Split(fileName, "-")[0], "_")[1]
+		size := obj.Size
 
 		if strings.Contains(obj.Name, "MAINNET") {
 			network = snapshot.NetworkType(snapshot.MAINNET)
@@ -92,6 +93,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 		item := snapshot.SnapshotItem{
 			FileName:        fileName,
 			Network:         network,
+			Size:            size,
 			NetworkProtocol: networkProtocol,
 			Date:            date,
 			SnapshotType:    snapshotType,

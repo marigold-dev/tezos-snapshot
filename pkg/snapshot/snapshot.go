@@ -11,6 +11,7 @@ type SnapshotItem struct {
 	Blockhash       string
 	Blocklevel      string
 	PublicURL       string
+	Size            int64
 }
 
 type SnapshotType string

@@ -23,7 +23,11 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
     }}>
       <CardContent>
         <Typography sx={{ fontSize: '14px', display: 'flex' }} gutterBottom>
-          <span style={{ flex: '1' }}>{props.snapshot.SnapshotType} - {props.snapshot.Network}</span>
+          <span style={{ flex: '1' }}> {
+          props.snapshot.NetworkProtocol === props.snapshot.Network
+            ? props.snapshot.Network
+            : `${props.snapshot.Network} - ${props.snapshot.NetworkProtocol}`
+          } - {props.snapshot.SnapshotType} - {formatBytes(props.snapshot.Size ?? 0)}</span>
         </Typography>
         <Typography style={{ fontWeight: 'bold', fontSize: '2.3vh', overflowWrap: 'break-word' }} component="div">
           {props.snapshot.Blockhash}
@@ -36,6 +40,18 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
       </CardActions>
     </Card>
   )
+}
+
+const formatBytes = (bytes: number, decimals: number = 2) => {
+  if (bytes === 0) return '0 Bytes'
+
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
 export default SnapshotItem
