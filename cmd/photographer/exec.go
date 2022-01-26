@@ -7,13 +7,16 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
 func createSnapshot(rolling bool) {
 	bin := "/usr/local/bin/tezos-node"
 
-	args := []string{"snapshot", "export", "--block head~1", "--data-dir", "/var/run/tezos/node/data"}
+	hashblock := relativeBlockHash(30)
+
+	args := []string{"snapshot", "export", "--block " + hashblock, "--data-dir", "/var/run/tezos/node/data"}
 
 	if rolling {
 		args = append(args, "--rolling")
@@ -63,4 +66,27 @@ func getSnapshotNames(isRolling bool) string {
 	}
 
 	return full
+}
+
+func relativeBlockHash(relative int) string {
+	regex, err := regexp.Compile("(\"|')(.*)(\"|')")
+	if err != nil {
+		log.Fatalf("%v \n", err)
+	}
+	bin := "/usr/local/bin/tezos-client"
+
+	args := []string{"rpc", "get", fmt.Sprintf("%s%d%s", "/chains/main/blocks/head~", relative, "/hash")}
+
+	cmd := exec.Command(bin, args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("%v \n", err)
+	}
+	strOut := string(output)
+
+	regexResult := regex.FindString(strOut)
+	regexResultWithoutSimpleQuotes := strings.ReplaceAll(regexResult, "'", "")
+	regexResultWithoutQuotes := strings.ReplaceAll(regexResultWithoutSimpleQuotes, "\"", "")
+
+	return regexResultWithoutQuotes
 }
