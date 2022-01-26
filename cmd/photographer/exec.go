@@ -14,9 +14,10 @@ import (
 func createSnapshot(rolling bool) {
 	bin := "/usr/local/bin/tezos-node"
 
-	hashblock := relativeBlockHash(30)
+	blockHash := relativeBlockHash(30)
+	fmt.Printf("block hash found: %s", blockHash)
 
-	args := []string{"snapshot", "export", "--block " + hashblock, "--data-dir", "/var/run/tezos/node/data"}
+	args := []string{"snapshot", "export", "--block " + blockHash, "--data-dir", "/var/run/tezos/node/data"}
 
 	if rolling {
 		args = append(args, "--rolling")
@@ -83,6 +84,8 @@ func relativeBlockHash(relative int) string {
 		log.Fatalf("%v \n", err)
 	}
 	strOut := string(output)
+	fmt.Println("Output getting hash block:")
+	fmt.Println(strOut)
 
 	regexResult := regex.FindString(strOut)
 	regexResultWithoutSimpleQuotes := strings.ReplaceAll(regexResult, "'", "")
