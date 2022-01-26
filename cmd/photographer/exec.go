@@ -7,17 +7,13 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 )
 
-func createSnapshot(endpoint string, rolling bool) {
+func createSnapshot(rolling bool) {
 	bin := "/usr/local/bin/tezos-node"
 
-	blockHash := relativeBlockHash(30, endpoint)
-	fmt.Printf("block hash found: %s", blockHash)
-
-	args := []string{"snapshot", "export", "--block " + blockHash, "--data-dir", "/var/run/tezos/node/data"}
+	args := []string{"snapshot", "export", "--block", "head~30", "--data-dir", "/var/run/tezos/node/data"}
 
 	if rolling {
 		args = append(args, "--rolling")
@@ -67,35 +63,4 @@ func getSnapshotNames(isRolling bool) string {
 	}
 
 	return full
-}
-
-func relativeBlockHash(relative int, endpoint string) string {
-	regex, err := regexp.Compile("(\"|')(.*)(\"|')")
-	if err != nil {
-		log.Fatalf("%v \n", err)
-	}
-
-	bin := "/usr/local/bin/tezos-client"
-
-	args := []string{
-		"--endpoint", endpoint,
-		"rpc", "get",
-		fmt.Sprintf("%s%d%s", "/chains/main/blocks/head~", relative, "/hash"),
-	}
-
-	cmd := exec.Command(bin, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Fatalf("%v \n", err)
-		return ""
-	}
-	strOut := string(output)
-	fmt.Println("Output getting hash block:")
-	fmt.Println(strOut)
-
-	regexResult := regex.FindString(strOut)
-	regexResultWithoutSimpleQuotes := strings.ReplaceAll(regexResult, "'", "")
-	regexResultWithoutQuotes := strings.ReplaceAll(regexResultWithoutSimpleQuotes, "\"", "")
-
-	return regexResultWithoutQuotes
 }
