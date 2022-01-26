@@ -14,9 +14,14 @@ func main() {
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
 	isRollingSnapshot := util.GetEnvBool("ROLLING", false)
+	endpoint := os.Getenv("ENDPOINT")
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
+	}
+
+	if endpoint == "" {
+		log.Fatalln("The ENDPOINT environment variable is empty.")
 	}
 
 	client, err := storage.NewClient(ctx)
@@ -27,7 +32,7 @@ func main() {
 
 	snapshotStorage := util.NewSnapshotStorage(client, bucketName)
 
-	createSnapshot(isRollingSnapshot)
+	createSnapshot(endpoint, isRollingSnapshot)
 
 	snapshotfileName := getSnapshotNames(isRollingSnapshot)
 

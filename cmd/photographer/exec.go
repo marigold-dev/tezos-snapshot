@@ -11,10 +11,10 @@ import (
 	"strings"
 )
 
-func createSnapshot(rolling bool) {
+func createSnapshot(endpoint string, rolling bool) {
 	bin := "/usr/local/bin/tezos-node"
 
-	blockHash := relativeBlockHash(30)
+	blockHash := relativeBlockHash(30, endpoint)
 	fmt.Printf("block hash found: %s", blockHash)
 
 	args := []string{"snapshot", "export", "--block " + blockHash, "--data-dir", "/var/run/tezos/node/data"}
@@ -69,19 +69,25 @@ func getSnapshotNames(isRolling bool) string {
 	return full
 }
 
-func relativeBlockHash(relative int) string {
+func relativeBlockHash(relative int, endpoint string) string {
 	regex, err := regexp.Compile("(\"|')(.*)(\"|')")
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
+
 	bin := "/usr/local/bin/tezos-client"
 
-	args := []string{"rpc", "get", fmt.Sprintf("%s%d%s", "/chains/main/blocks/head~", relative, "/hash")}
+	args := []string{
+		"--endpoint", endpoint,
+		"rpc", "get",
+		fmt.Sprintf("%s%d%s", "/chains/main/blocks/head~", relative, "/hash"),
+	}
 
 	cmd := exec.Command(bin, args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("%v \n", err)
+		return ""
 	}
 	strOut := string(output)
 	fmt.Println("Output getting hash block:")
