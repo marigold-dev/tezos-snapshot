@@ -13,7 +13,7 @@ import (
 func createSnapshot(rolling bool) {
 	bin := "/usr/local/bin/tezos-node"
 
-	args := []string{"snapshot", "export", "--block head", "--data-dir", "/var/run/tezos/node/data"}
+	args := []string{"snapshot", "export", "--block head~1", "--data-dir", "/var/run/tezos/node/data"}
 
 	if rolling {
 		args = append(args, "--rolling")
