@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"log"
@@ -135,6 +136,7 @@ func (s *SnapshotStorage) DeleteOldSnapshots(ctx context.Context, maxDays int) {
 }
 
 func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) error {
+	hasher := sha256.New()
 	currentTime := time.Now()
 	currentDate := currentTime.Format("2006.01.02")
 
@@ -143,11 +145,21 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	fileName := currentDate + "/" + file.Name()
 
 	objectHandler := s.client.Bucket(s.bucketName).Object(fileName)
+
 	writer := objectHandler.NewWriter(ctx)
+
+	if _, err := io.Copy(hasher, file); err != nil {
+		fmt.Printf("Error Write Copy SHA256 checksum")
+		return err
+	}
+
 	if _, err := io.Copy(writer, file); err != nil {
 		fmt.Printf("Error Write Copy")
 		return err
 	}
+
+	writer.Metadata["SHA256CHECKSUM"] = fmt.Sprintf("%x", hasher.Sum(nil))
+
 	if err := writer.Close(); err != nil {
 		fmt.Printf("Error Write Close")
 		return err
@@ -160,6 +172,8 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 		return err
 	}
 	fmt.Printf("Blob %q is public now.\n", file.Name())
+
+	// Add Checksum Metadata
 
 	return nil
 }
