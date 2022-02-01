@@ -1,4 +1,4 @@
-name: Create Docker Images
+name: Create Frontend Docker Images
 
 on:
   push:
