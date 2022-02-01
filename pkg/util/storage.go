@@ -158,6 +158,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 		return err
 	}
 
+	writer.Metadata = make(map[string]string)
 	writer.Metadata["SHA256CHECKSUM"] = fmt.Sprintf("%x", hasher.Sum(nil))
 
 	if err := writer.Close(); err != nil {
