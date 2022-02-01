@@ -91,6 +91,8 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 		blocklevel := splitedByHyphen[len(splitedByHyphen)-1]
 		blockhash := splitedByHyphen[len(splitedByHyphen)-2]
 
+		checksum := obj.Metadata["SHA256CHECKSUM"]
+
 		item := snapshot.SnapshotItem{
 			FileName:        fileName,
 			Network:         network,
@@ -101,6 +103,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			PublicURL:       obj.MediaLink,
 			Blockhash:       blockhash,
 			Blocklevel:      blocklevel,
+			SHA256Checksum:  checksum,
 		}
 
 		items = append(items, item)

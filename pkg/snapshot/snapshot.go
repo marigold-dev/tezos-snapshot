@@ -12,6 +12,7 @@ type SnapshotItem struct {
 	Blocklevel      string
 	PublicURL       string
 	Size            int64
+	SHA256Checksum  string
 }
 
 type SnapshotType string
