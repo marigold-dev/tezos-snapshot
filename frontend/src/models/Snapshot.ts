@@ -8,6 +8,7 @@ export type Snapshot = {
   Date: Date;
   SnapshotType: SnapshotType;
   Blockhash: string;
+  SHA256Checksum: string;
   Blocklevel: string;
   PublicURL: string;
   Size: number;
