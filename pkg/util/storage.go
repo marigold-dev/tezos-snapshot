@@ -148,18 +148,10 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 
 	writer := objectHandler.NewWriter(ctx)
 
-	if _, err := io.Copy(hasher, file); err != nil {
-		fmt.Printf("Error Write Copy SHA256 checksum")
-		return err
-	}
-
 	if _, err := io.Copy(writer, file); err != nil {
 		fmt.Printf("Error Write Copy")
 		return err
 	}
-
-	writer.Metadata = make(map[string]string)
-	writer.Metadata["SHA256CHECKSUM"] = fmt.Sprintf("%x", hasher.Sum(nil))
 
 	if err := writer.Close(); err != nil {
 		fmt.Printf("Error Write Close")
@@ -175,6 +167,21 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	fmt.Printf("Blob %q is public now.\n", file.Name())
 
 	// Add Checksum Metadata
+	if _, err := io.Copy(hasher, file); err != nil {
+		fmt.Printf("Error Write Copy SHA256 checksum")
+		return err
+	}
+
+	objectAttrsToUpdate := storage.ObjectAttrsToUpdate{
+		Metadata: map[string]string{
+			"SHA256CHECKSUM": fmt.Sprintf("%x", hasher.Sum(nil)),
+		},
+	}
+
+	if _, err := objectHandler.Update(ctx, objectAttrsToUpdate); err != nil {
+		fmt.Printf("Error Update SHA256 checksum metadata")
+		return err
+	}
 
 	return nil
 }
