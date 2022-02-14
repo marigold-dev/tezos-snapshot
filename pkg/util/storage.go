@@ -110,12 +110,14 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 
 	// Order by date and network
 	sort.Slice(items, func(i, j int) bool {
+		if items[i].Date == items[j].Date {
+			networkIsPriority :=
+				snapshot.NetworkProtocolPriority(items[i].NetworkProtocol) <
+					snapshot.NetworkProtocolPriority(items[j].NetworkProtocol)
+			return networkIsPriority
+		}
 		dateIsGreater := items[i].Date.After(items[j].Date)
-		networkIsPriority :=
-			snapshot.NetworkProtocolPriority(items[i].NetworkProtocol) >
-				snapshot.NetworkProtocolPriority(items[j].NetworkProtocol)
-
-		return dateIsGreater && networkIsPriority
+		return dateIsGreater
 	})
 
 	return items
