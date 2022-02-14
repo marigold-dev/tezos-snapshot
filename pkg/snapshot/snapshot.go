@@ -5,7 +5,7 @@ import "time"
 type SnapshotItem struct {
 	FileName        string
 	Network         NetworkType
-	NetworkProtocol string
+	NetworkProtocol NetworkProtocolType
 	Date            time.Time
 	SnapshotType    SnapshotType
 	Blockhash       string
@@ -17,6 +17,7 @@ type SnapshotItem struct {
 
 type SnapshotType string
 type NetworkType string
+type NetworkProtocolType string
 
 const (
 	ROLLING SnapshotType = "ROLLING"
@@ -25,4 +26,10 @@ const (
 const (
 	MAINNET NetworkType = "MAINNET"
 	TESTNET NetworkType = "TESTNET"
+)
+
+const (
+	MAIN     NetworkProtocolType = "MAINNET"
+	HANGZHOU NetworkProtocolType = "HANGZHOUNET"
+	ITHACA   NetworkProtocolType = "ITHACANET"
 )

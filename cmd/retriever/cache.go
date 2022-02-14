@@ -36,11 +36,12 @@ func getNewestSnapshot(
 	bucketName string,
 	network snapshot.NetworkType,
 	snapshotType snapshot.SnapshotType,
+	protocol snapshot.NetworkProtocolType,
 ) (*snapshot.SnapshotItem, error) {
 	items := getSnapshotItemsCached(ctx, goCache, bucketName)
 
 	for _, item := range items {
-		if item.Network == network && item.SnapshotType == snapshotType {
+		if item.Network == network && item.SnapshotType == snapshotType && item.NetworkProtocol == protocol {
 			return &item, nil
 		}
 	}

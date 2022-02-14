@@ -33,14 +33,14 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	downloadableHandlerBuilder := func(network snapshot.NetworkType) func(c echo.Context) error {
+	downloadableHandlerBuilder := func(network snapshot.NetworkType, protocol snapshot.NetworkProtocolType) func(c echo.Context) error {
 		return func(c echo.Context) error {
 			snapshotType := snapshot.ROLLING
 			if c.Param("type") == "full" {
 				snapshotType = snapshot.FULL
 			}
 
-			snapshot, err := getNewestSnapshot(c.Request().Context(), goCache, bucketName, network, snapshotType)
+			snapshot, err := getNewestSnapshot(c.Request().Context(), goCache, bucketName, network, snapshotType, protocol)
 			if err != nil {
 				return err
 			}
@@ -49,10 +49,12 @@ func main() {
 		}
 	}
 
-	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET))
-	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET))
-	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET))
-	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET))
+	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
+	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
+	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
+	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
+	e.GET("/hangzhounet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
+	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
 	e.GET("/", func(c echo.Context) error {
 		snapshots := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
 		snapshotsFromToday := []snapshot.SnapshotItem{}
