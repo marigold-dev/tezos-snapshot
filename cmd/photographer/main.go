@@ -4,12 +4,14 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 )
 
 func main() {
+	start := time.Now()
 	ctx := context.Background()
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
@@ -34,4 +36,6 @@ func main() {
 	snapshotStorage.EphemeralUpload(ctx, snapshotfileName)
 
 	snapshotStorage.DeleteOldSnapshots(ctx, maxDays)
+
+	log.Printf("Snapshot job took %s", time.Since(start))
 }
