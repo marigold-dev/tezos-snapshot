@@ -57,21 +57,10 @@ func main() {
 	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
 	e.GET("/", func(c echo.Context) error {
 		snapshots := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
-		snapshotsFromToday := []snapshot.SnapshotItem{}
 		responseSnapshot := []snapshot.SnapshotItem{}
-		now := time.Now()
 
 		for _, i := range snapshots {
-			if i.Date.YearDay() == now.YearDay() && i.Date.Year() == now.Year() {
-				snapshotsFromToday = append(snapshotsFromToday, i)
-			} else {
-				responseSnapshot = append(responseSnapshot, i)
-			}
-		}
-
-		// Only show today snapshots if we have all
-		if len(snapshotsFromToday) >= 4 {
-			responseSnapshot = append(snapshotsFromToday, responseSnapshot...)
+			responseSnapshot = append(responseSnapshot, i)
 		}
 
 		return c.JSON(http.StatusOK, responseSnapshot)
