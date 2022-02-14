@@ -1,6 +1,9 @@
 package snapshot
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 type SnapshotItem struct {
 	FileName        string
@@ -33,3 +36,16 @@ const (
 	HANGZHOU NetworkProtocolType = "HANGZHOUNET"
 	ITHACA   NetworkProtocolType = "ITHACANET"
 )
+
+func NetworkProtocolPriority(networkProtocol NetworkProtocolType) int {
+	switch networkProtocol {
+	case MAIN:
+		return 0
+	case HANGZHOU:
+		return 1
+	case ITHACA:
+		return 2
+	}
+
+	return math.MaxInt
+}
