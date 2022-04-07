@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -19,14 +20,21 @@ func createSnapshot(rolling bool) {
 		args = append(args, "--rolling")
 	}
 
-	var errBuf, outBuf bytes.Buffer
 	cmd := exec.Command(bin, args...)
-	cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
-	cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
-	err := cmd.Run()
+
+	stderr, err := cmd.StderrPipe()
+	cmd.Start()
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
+
+	scanner := bufio.NewScanner(stderr)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		m := scanner.Text()
+		fmt.Println(m)
+	}
+	cmd.Wait()
 }
 
 func getSnapshotNames(isRolling bool) string {
