@@ -7,7 +7,7 @@ COPY ./cmd ./cmd
 COPY ./pkg ./pkg
 RUN cd cmd/retriever && go build -o /main
 
-FROM tezos/tezos:latest-release
+FROM tezos/tezos:release
 RUN sudo apk add curl lz4 xz jq
 COPY --from=0 /main ./
 EXPOSE 8080

@@ -7,7 +7,7 @@ COPY ./cmd ./cmd
 COPY ./pkg ./pkg
 RUN cd cmd/photographer && go build -o /main
 
-FROM tezos/tezos:latest-release
+FROM tezos/tezos:v12.4
 RUN sudo apk add curl lz4 xz jq
 COPY --from=0 /main ./
 ENTRYPOINT ["./main"]
