@@ -78,6 +78,7 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, rolling
 	})
 
 	if alreadyExist {
+		log.Printf("Already exist a today snapshot with %q type. \n", network)
 		return
 	}
 
