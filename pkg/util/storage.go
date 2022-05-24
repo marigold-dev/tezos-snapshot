@@ -26,20 +26,20 @@ func NewSnapshotStorage(client *storage.Client, bucketName string) *SnapshotStor
 }
 
 func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string) {
-	fmt.Printf("Opening snapshot file %q.", fileName)
+	log.Printf("Opening snapshot file %q.", fileName)
 	snapshotFile, err := os.Open(fileName)
 	if err != nil {
 		log.Fatalf("os.Open: %v", err)
 	}
 	defer snapshotFile.Close()
 
-	fmt.Printf("Uploading %q snapshot to Google Clound Storage.", fileName)
+	log.Printf("Uploading %q snapshot to Google Clound Storage.", fileName)
 	err = s.uploadSnapshot(ctx, snapshotFile)
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
 
-	fmt.Printf("Deleting snapshot file %q.", fileName)
+	log.Printf("Deleting snapshot file %q.", fileName)
 	err = os.Remove(fileName)
 	if err != nil {
 		log.Fatal(err)
@@ -133,7 +133,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 }
 
 func (s *SnapshotStorage) DeleteOldSnapshots(ctx context.Context, maxDays int) {
-	fmt.Println("Deleting old snapshots in the Google Cloud Storage.")
+	log.Println("Deleting old snapshots in the Google Cloud Storage.")
 
 	it := s.client.Bucket(s.bucketName).Objects(ctx, &storage.Query{})
 
@@ -148,7 +148,7 @@ func (s *SnapshotStorage) DeleteOldSnapshots(ctx context.Context, maxDays int) {
 
 		err = s.deleteFile(ctx, maxDays, obj)
 		if err != nil {
-			fmt.Printf("%v \n", err)
+			log.Printf("%v \n", err)
 		}
 	}
 }
@@ -158,7 +158,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	currentTime := time.Now()
 	currentDate := currentTime.Format("2006.01.02")
 
-	fmt.Printf("Current Date is %q.\n", currentDate)
+	log.Printf("Current Date is %q.\n", currentDate)
 
 	fileName := currentDate + "/" + file.Name()
 
@@ -169,22 +169,22 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	writer := io.MultiWriter(objWriter, hasher)
 
 	if _, err := io.Copy(writer, file); err != nil {
-		fmt.Printf("Error Write Copy")
+		log.Printf("Error Write Copy")
 		return err
 	}
 
 	if err := objWriter.Close(); err != nil {
-		fmt.Printf("Error Write Close")
+		log.Printf("Error Write Close")
 		return err
 	}
-	fmt.Printf("Blob %q uploaded.\n", file.Name())
+	log.Printf("Blob %q uploaded.\n", file.Name())
 
 	// Make this file public
 	acl := objectHandler.ACL()
 	if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 		return err
 	}
-	fmt.Printf("Blob %q is public now.\n", file.Name())
+	log.Printf("Blob %q is public now.\n", file.Name())
 
 	// Add Checksum Metadata
 	objectAttrsToUpdate := storage.ObjectAttrsToUpdate{
@@ -194,7 +194,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 
 	if _, err := objectHandler.Update(ctx, objectAttrsToUpdate); err != nil {
-		fmt.Printf("Error Update SHA256 checksum metadata")
+		log.Printf("Error Update SHA256 checksum metadata")
 		return err
 	}
 
@@ -202,7 +202,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 }
 
 func (s *SnapshotStorage) deleteFile(ctx context.Context, maxDays int, obj *storage.ObjectAttrs) error {
-	fmt.Printf("Check if is needed delete %q object. \n", obj.Name)
+	log.Printf("Check if is needed delete %q object. \n", obj.Name)
 
 	paths := strings.Split(obj.Name, "/")
 
@@ -211,29 +211,29 @@ func (s *SnapshotStorage) deleteFile(ctx context.Context, maxDays int, obj *stor
 	}
 
 	folderName := paths[0]
-	fmt.Printf("Name folder is %q. \n", folderName)
+	log.Printf("Name folder is %q. \n", folderName)
 
 	t, err := time.Parse("2006.01.02", folderName)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Date folder is %v. \n", t)
+	log.Printf("Date folder is %v. \n", t)
 
 	diff := time.Now().Sub(t)
-	fmt.Printf("Date folder diff is %d. \n", diff)
+	log.Printf("Date folder diff is %d. \n", diff)
 
 	diffDays := int(diff.Hours() / 24)
-	fmt.Printf("Date folder diffDays is %d. \n", diffDays)
+	log.Printf("Date folder diffDays is %d. \n", diffDays)
 
 	if diffDays > maxDays {
-		fmt.Printf("Deleting %q object. \n", obj.Name)
+		log.Printf("Deleting %q object. \n", obj.Name)
 
 		objHandler := s.client.Bucket(s.bucketName).Object(obj.Name)
 		err = objHandler.Delete(ctx)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%q object deleted. \n", obj.Name)
+		log.Printf("%q object deleted. \n", obj.Name)
 	}
 	return nil
 }

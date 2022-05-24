@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -25,24 +23,16 @@ func createSnapshot(rolling bool) {
 	}
 
 	cmd := exec.Command(bin, args...)
-
-	stderr, err := cmd.StderrPipe()
-	cmd.Start()
-	if err != nil {
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("%v \n", err)
 	}
-
-	scanner := bufio.NewScanner(stderr)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		m := scanner.Text()
-		fmt.Println(m)
-	}
-	cmd.Wait()
 }
 
 func getSnapshotNames(isRolling bool) string {
-	fmt.Println("Getting snapshot names.")
+	log.Println("Getting snapshot names.")
 	var errBuf, outBuf bytes.Buffer
 	cmd := exec.Command("/bin/ls", "-1a")
 	cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
@@ -53,8 +43,8 @@ func getSnapshotNames(isRolling bool) string {
 	}
 	snapshotfileNames := strings.Split(outBuf.String(), "\n")
 
-	fmt.Print(outBuf.String())
-	fmt.Printf("len: %d \n", len(snapshotfileNames))
+	log.Print(outBuf.String())
+	log.Printf("len: %d \n", len(snapshotfileNames))
 
 	var rolling, full string
 
@@ -66,11 +56,11 @@ func getSnapshotNames(isRolling bool) string {
 	}
 
 	if isRolling {
-		fmt.Printf("Rolling snapshot file is: %q. \n", rolling)
+		log.Printf("Rolling snapshot file is: %q. \n", rolling)
 		return rolling
 	}
 
-	fmt.Printf("Full snapshot file is: %q. \n", full)
+	log.Printf("Full snapshot file is: %q. \n", full)
 	return full
 }
 

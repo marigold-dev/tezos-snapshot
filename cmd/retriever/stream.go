@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -13,7 +13,7 @@ func streamFile(e echo.Context, client *http.Client, fileName, url string) error
 	//Copy the relevant headers. If you want to preserve the downloaded file name, extract it with go's url parser.
 	resp, err := client.Get(url)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer resp.Body.Close()
 

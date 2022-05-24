@@ -14,7 +14,7 @@ import (
 func getSnapshotItemsCached(ctx context.Context, goCache *cache.Cache, bucketName string) []snapshot.SnapshotItem {
 	itemsFound, found := goCache.Get("items")
 	if found {
-		fmt.Println("Using items from cache...")
+		log.Println("Using items from cache...")
 		return itemsFound.([]snapshot.SnapshotItem)
 	}
 
