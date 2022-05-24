@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -31,7 +32,7 @@ func createSnapshot(rolling bool) {
 	}
 }
 
-func getSnapshotNames(isRolling bool) string {
+func getSnapshotNames(isRolling bool) (string, error) {
 	log.Println("Getting snapshot names.")
 	var errBuf, outBuf bytes.Buffer
 	cmd := exec.Command("/bin/ls", "-1a")
@@ -42,26 +43,22 @@ func getSnapshotNames(isRolling bool) string {
 		log.Fatalf("%v \n", err)
 	}
 	snapshotfileNames := strings.Split(outBuf.String(), "\n")
+	log.Printf("All files found: %v \n", snapshotfileNames)
 
-	log.Print(outBuf.String())
-	log.Printf("len: %d \n", len(snapshotfileNames))
+	extension := "full"
 
-	var rolling, full string
+	if isRolling {
+		extension = "rolling"
+	}
 
 	for _, fileName := range snapshotfileNames {
-		var fileNameLower = strings.ToLower(fileName)
-		if strings.Contains(fileNameLower, "tezos") {
-			rolling = fileNameLower
+		if strings.Contains(fileName, extension) {
+			log.Printf("Snapshot file found is: %q. \n", fileName)
+			return fileName, nil
 		}
 	}
 
-	if isRolling {
-		log.Printf("Rolling snapshot file is: %q. \n", rolling)
-		return rolling
-	}
-
-	log.Printf("Full snapshot file is: %q. \n", full)
-	return full
+	return "", fmt.Errorf("Snapshot file not found.")
 }
 
 func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, rolling bool, network snapshot.NetworkProtocolType) {
@@ -83,6 +80,9 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, rolling
 	}
 
 	createSnapshot(rolling)
-	snapshotfileName := getSnapshotNames(rolling)
+	snapshotfileName, err := getSnapshotNames(rolling)
+	if err != nil {
+		log.Fatalf("%v \n", err)
+	}
 	snapshotStorage.EphemeralUpload(ctx, snapshotfileName)
 }
