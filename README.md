@@ -14,9 +14,10 @@ We from marigold use it as a CronJob in K8S that is triggered every day.
 Set the following environment variables:
 
 ```bash
-export BUCKET_NAME = "mybucket"
-export MAX_DAYS = "3" # optional, default is 7
 export GOOGLE_APPLICATION_CREDENTIALS = "/path/to/your/client_secret.json"
+export BUCKET_NAME = "mybucket"
+export NETWORK = "MAINNET"
+export MAX_DAYS = "3" # optional, default is 7
 ```
 
 Running locally:
