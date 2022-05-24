@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -16,7 +17,7 @@ func main() {
 	ctx := context.Background()
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
-	network := snapshot.NetworkProtocolType(os.Getenv("NETWORK"))
+	network := snapshot.NetworkProtocolType(strings.ToUpper(os.Getenv("NETWORK")))
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
