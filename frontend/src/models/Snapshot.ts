@@ -1,10 +1,11 @@
 export type SnapshotType = 'ROLLING' | 'FULL'
 export type NetworkType = 'MAINNET' | 'TESTNET'
+export type NetworkProtocolType = 'MAINNET' | 'HANGZHOUNET' | 'ITHACANET'
 
 export type Snapshot = {
   FileName: string;
   Network: NetworkType;
-  NetworkProtocol: NetworkType;
+  NetworkProtocol: NetworkProtocolType;
   Date: Date;
   SnapshotType: SnapshotType;
   Blockhash: string;

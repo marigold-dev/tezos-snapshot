@@ -12,9 +12,8 @@ export function App () {
   const [snapshots, setSnapshots] = useState<Array<Snapshot>>([])
   useEffect(() => {
     if (snapshots.length < 1) {
-      axios.get('https://snapshot-api.tezos.marigold.dev/').then((request: any) => {
+      axios.get(process.env.REACT_APP_BACKEND_URL!).then((request: any) => {
         setSnapshots(request.data)
-        console.log(snapshots)
       })
     }
   }, [snapshots, setSnapshots])

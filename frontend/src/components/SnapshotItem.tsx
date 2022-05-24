@@ -45,7 +45,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
             TzKT
         </Button>
         <Button sx={{ color: theme.palette.text.primary, textDecoration: 'underline' }} size="small"
-         href={getTzStampLink(props.snapshot.NetworkProtocol) + props.snapshot.Blockhash}>
+         href={getTzStatsLink(props.snapshot.NetworkProtocol) + props.snapshot.Blockhash}>
             TzStats
         </Button>
         <Button sx={{ color: theme.palette.text.primary, textDecoration: 'underline' }} size="small"
@@ -57,8 +57,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
   )
 }
 
-const getTzStampLink = (networkProtocol: string) => {
-  console.log(networkProtocol)
+const getTzStatsLink = (networkProtocol: string) => {
   if (networkProtocol === 'MAINNET') {
     return ('https://tzstats.com/')
   }
