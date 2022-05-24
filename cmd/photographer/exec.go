@@ -2,16 +2,12 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
-	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 )
 
 func createSnapshot(rolling bool) {
@@ -59,30 +55,4 @@ func getSnapshotNames(isRolling bool) (string, error) {
 	}
 
 	return "", fmt.Errorf("Snapshot file not found.")
-}
-
-func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, rolling bool, network snapshot.NetworkProtocolType) {
-	todayItems := snapshotStorage.GetTodaySnapshotsItems(ctx)
-
-	snapshotType := snapshot.FULL
-
-	if rolling {
-		snapshotType = snapshot.ROLLING
-	}
-
-	alreadyExist := util.Some(todayItems, func(item snapshot.SnapshotItem) bool {
-		return item.NetworkProtocol == network && item.SnapshotType == snapshotType
-	})
-
-	if alreadyExist {
-		log.Printf("Already exist a today snapshot with %q type. \n", network)
-		return
-	}
-
-	createSnapshot(rolling)
-	snapshotfileName, err := getSnapshotNames(rolling)
-	if err != nil {
-		log.Fatalf("%v \n", err)
-	}
-	snapshotStorage.EphemeralUpload(ctx, snapshotfileName)
 }
