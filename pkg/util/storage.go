@@ -46,6 +46,15 @@ func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string) 
 	}
 }
 
+func (s *SnapshotStorage) GetTodaySnapshotsItems(ctx context.Context) []snapshot.SnapshotItem {
+	items := s.GetSnapshotItems(ctx)
+	todayItems := Filter(items, func(item snapshot.SnapshotItem) bool {
+		now := time.Now()
+		return (item.Date.YearDay() == now.YearDay() && item.Date.Year() == now.Year())
+	})
+	return todayItems
+}
+
 func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.SnapshotItem {
 
 	items := []snapshot.SnapshotItem{}

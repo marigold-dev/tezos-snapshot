@@ -3,12 +3,16 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
+	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 )
 
 func createSnapshot(rolling bool) {
@@ -55,20 +59,39 @@ func getSnapshotNames(isRolling bool) string {
 	var rolling, full string
 
 	for _, fileName := range snapshotfileNames {
-		if strings.Contains(fileName, "rolling") {
-			rolling = fileName
-		}
-		if strings.Contains(fileName, "full") {
-			full = fileName
+		var fileNameLower = strings.ToLower(fileName)
+		if strings.Contains(fileNameLower, "tezos") {
+			rolling = fileNameLower
 		}
 	}
 
-	fmt.Printf("Full snapshot file is: %q. \n", full)
-	fmt.Printf("Rolling snapshot file is: %q. \n", rolling)
-
 	if isRolling {
+		fmt.Printf("Rolling snapshot file is: %q. \n", rolling)
 		return rolling
 	}
 
+	fmt.Printf("Full snapshot file is: %q. \n", full)
 	return full
+}
+
+func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, rolling bool, network snapshot.NetworkProtocolType) {
+	todayItems := snapshotStorage.GetTodaySnapshotsItems(ctx)
+
+	snapshotType := snapshot.FULL
+
+	if rolling {
+		snapshotType = snapshot.ROLLING
+	}
+
+	alreadyExist := util.Some(todayItems, func(item snapshot.SnapshotItem) bool {
+		return item.NetworkProtocol == network && item.SnapshotType == snapshotType
+	})
+
+	if alreadyExist {
+		return
+	}
+
+	createSnapshot(rolling)
+	snapshotfileName := getSnapshotNames(rolling)
+	snapshotStorage.EphemeralUpload(ctx, snapshotfileName)
 }

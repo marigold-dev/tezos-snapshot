@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 )
 
@@ -15,10 +16,14 @@ func main() {
 	ctx := context.Background()
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
-	isRollingSnapshot := util.GetEnvBool("ROLLING", false)
+	network := snapshot.NetworkProtocolType(os.Getenv("NETWORK"))
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
+	}
+
+	if network == "" {
+		log.Fatalln("The NETWORK environment variable is empty.")
 	}
 
 	client, err := storage.NewClient(ctx)
@@ -29,11 +34,11 @@ func main() {
 
 	snapshotStorage := util.NewSnapshotStorage(client, bucketName)
 
-	createSnapshot(isRollingSnapshot)
+	// Check if the today rolling snapshot already exists
+	execute(ctx, snapshotStorage, true, network)
 
-	snapshotfileName := getSnapshotNames(isRollingSnapshot)
-
-	snapshotStorage.EphemeralUpload(ctx, snapshotfileName)
+	// Check if the today full snapshot already exists
+	execute(ctx, snapshotStorage, false, network)
 
 	snapshotStorage.DeleteOldSnapshots(ctx, maxDays)
 
