@@ -7,5 +7,5 @@ COPY ./cmd ./cmd
 COPY ./pkg ./pkg
 RUN cd cmd/retriever && go build -o /main
 EXPOSE 8080
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["/main"]
 CMD [""]
