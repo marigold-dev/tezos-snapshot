@@ -33,6 +33,7 @@ const (
 
 const (
 	MAIN     NetworkProtocolType = "MAINNET"
+	JAKARTA  NetworkProtocolType = "JAKARTA"
 	HANGZHOU NetworkProtocolType = "HANGZHOUNET"
 	ITHACA   NetworkProtocolType = "ITHACANET"
 )

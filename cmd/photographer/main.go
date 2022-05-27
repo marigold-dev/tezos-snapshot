@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 	"github.com/marigold-dev/tezos-snapshot/pkg/util"
+	"github.com/samber/lo"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 	ctx := context.Background()
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
+	maxMonths := util.GetEnvInt("MAX_MONTHS", 6)
 	network := snapshot.NetworkProtocolType(strings.ToUpper(os.Getenv("NETWORK")))
 
 	if bucketName == "" {
@@ -41,7 +43,7 @@ func main() {
 	// Check if the today full snapshot already exists
 	execute(ctx, snapshotStorage, false, network)
 
-	snapshotStorage.DeleteOldSnapshots(ctx, maxDays)
+	snapshotStorage.DeleteExpiredSnapshots(ctx, maxDays, maxMonths)
 
 	log.Printf("Snapshot job took %s", time.Since(start))
 }
@@ -55,7 +57,7 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, rolling
 		snapshotType = snapshot.ROLLING
 	}
 
-	alreadyExist := util.Some(todayItems, func(item snapshot.SnapshotItem) bool {
+	alreadyExist := lo.SomeBy(todayItems, func(item snapshot.SnapshotItem) bool {
 		return item.NetworkProtocol == network && item.SnapshotType == snapshotType
 	})
 

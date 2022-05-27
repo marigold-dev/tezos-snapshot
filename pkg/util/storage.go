@@ -13,6 +13,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
+	"github.com/samber/lo"
 	"google.golang.org/api/iterator"
 )
 
@@ -48,7 +49,7 @@ func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string) 
 
 func (s *SnapshotStorage) GetTodaySnapshotsItems(ctx context.Context) []snapshot.SnapshotItem {
 	items := s.GetSnapshotItems(ctx)
-	todayItems := Filter(items, func(item snapshot.SnapshotItem) bool {
+	todayItems := lo.Filter(items, func(item snapshot.SnapshotItem, _ int) bool {
 		now := time.Now()
 		return (item.Date.YearDay() == now.YearDay() && item.Date.Year() == now.Year())
 	})
@@ -132,11 +133,12 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 	return items
 }
 
-func (s *SnapshotStorage) DeleteOldSnapshots(ctx context.Context, maxDays int) {
-	log.Println("Deleting old snapshots in the Google Cloud Storage.")
+func (s *SnapshotStorage) DeleteExpiredSnapshots(ctx context.Context, maxDays int, maxMonths int) {
+	log.Println("Deleting expired snapshots in the Google Cloud Storage.")
 
 	it := s.client.Bucket(s.bucketName).Objects(ctx, &storage.Query{})
 
+	files := []File{}
 	for {
 		obj, err := it.Next()
 		if err == iterator.Done {
@@ -146,11 +148,25 @@ func (s *SnapshotStorage) DeleteOldSnapshots(ctx context.Context, maxDays int) {
 			log.Fatalf("listBucket: unable to list bucket %q: %v \n", s.bucketName, err)
 		}
 
-		err = s.deleteFile(ctx, maxDays, obj)
+		file := File{
+			Name: obj.Name,
+		}
+
+		files = append(files, file)
+	}
+
+	now := time.Now()
+	filesToDelete := filterFilesToDelete(maxDays, maxMonths, files, now)
+
+	lo.ForEach(filesToDelete, func(file File, _ int) {
+		log.Printf("Deleting %q object. \n", file.Name)
+		objHandler := s.client.Bucket(s.bucketName).Object(file.Name)
+		err := objHandler.Delete(ctx)
 		if err != nil {
 			log.Printf("%v \n", err)
 		}
-	}
+		log.Printf("%q object deleted. \n", file.Name)
+	})
 }
 
 func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) error {
@@ -201,41 +217,68 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	return nil
 }
 
-func (s *SnapshotStorage) deleteFile(ctx context.Context, maxDays int, obj *storage.ObjectAttrs) error {
-	log.Printf("Check if is needed delete %q object. \n", obj.Name)
+func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time) []File {
+	fmt.Printf("Current Date is %q.\n", now.Format("2006.01.02"))
+	actualMounth := ((int(now.Month()) * 12) + int(now.Year()))
 
-	paths := strings.Split(obj.Name, "/")
+	filesByYearMonthLookUp := lo.GroupBy(files, func(file File) int {
+		return file.YearMonth()
+	})
 
-	if len(paths) <= 0 {
-		return fmt.Errorf("Invalid file name %q. \n", obj.Name)
-	}
+	filesByProtocolPriorityLookUp := lo.GroupBy(files, func(file File) snapshot.NetworkProtocolType {
+		return file.NetworkProtocol()
+	})
 
-	folderName := paths[0]
-	log.Printf("Name folder is %q. \n", folderName)
+	checkFileMustBeDeleted := func(file File, _ int) bool {
+		log.Printf("Check if is needed delete %q object. \n", file.Name)
 
-	t, err := time.Parse("2006.01.02", folderName)
-	if err != nil {
-		return err
-	}
-	log.Printf("Date folder is %v. \n", t)
+		// Files where its month it's not more than (maxMonth) months ago and
+		// it's not the first snapshot from its month.
+		if (file.YearMonth() - actualMounth) < maxMonths {
+			fmt.Printf("File YearMonth %d", file.YearMonth())
+			filesYearMonth := filesByYearMonthLookUp[file.YearMonth()]
+			filesYearMonthSameProtocolAndType := lo.Filter(filesYearMonth, func(f File, _ int) bool {
+				return file.NetworkProtocol() == f.NetworkProtocol() && file.SnapshotType() == f.SnapshotType()
+			})
 
-	diff := time.Now().Sub(t)
-	log.Printf("Date folder diff is %d. \n", diff)
+			fmt.Printf("here2: %v", filesYearMonthSameProtocolAndType)
+			firstFileWithThisMonth := lo.MinBy(filesYearMonthSameProtocolAndType, func(item File, min File) bool {
+				return item.Date().Before(min.Date())
+			})
 
-	diffDays := int(diff.Hours() / 24)
-	log.Printf("Date folder diffDays is %d. \n", diffDays)
+			fmt.Printf("here: %v", firstFileWithThisMonth)
 
-	if diffDays > maxDays {
-		log.Printf("Deleting %q object. \n", obj.Name)
-
-		objHandler := s.client.Bucket(s.bucketName).Object(obj.Name)
-		err = objHandler.Delete(ctx)
-		if err != nil {
-			return err
+			if file == firstFileWithThisMonth {
+				return false
+			}
 		}
-		log.Printf("%q object deleted. \n", obj.Name)
+
+		// Files where is not the first protocols file
+		filesProtocolPriority := filesByProtocolPriorityLookUp[file.NetworkProtocol()]
+		filesProtocolPrioritySameProtocolAndType := lo.Filter(filesProtocolPriority, func(f File, _ int) bool {
+			return file.NetworkProtocol() == f.NetworkProtocol() && file.SnapshotType() == f.SnapshotType()
+		})
+		firstFileWithThisProtocol := lo.MaxBy(filesProtocolPrioritySameProtocolAndType, func(item File, max File) bool {
+			return item.Date().After(max.Date())
+		})
+		if file == firstFileWithThisProtocol {
+			return false
+		}
+
+		// Files where is more than (maxDays) days ago
+
+		diffDays := int(now.Sub(file.Date()).Hours() / 24)
+		log.Printf("Date folder diffDays is %d. \n", diffDays)
+
+		if diffDays <= maxDays {
+			return false
+		}
+
+		log.Printf("Delete %q object. \n", file.Name)
+		return true
 	}
-	return nil
+
+	return lo.Filter(files, checkFileMustBeDeleted)
 }
 
 func isFile(file *storage.ObjectAttrs) (bool, string, string) {
