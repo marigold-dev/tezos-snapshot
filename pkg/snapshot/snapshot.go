@@ -33,7 +33,7 @@ const (
 
 const (
 	MAIN     NetworkProtocolType = "MAINNET"
-	JAKARTA  NetworkProtocolType = "JAKARTA"
+	JAKARTA  NetworkProtocolType = "JAKARTANET"
 	HANGZHOU NetworkProtocolType = "HANGZHOUNET"
 	ITHACA   NetworkProtocolType = "ITHACANET"
 )
@@ -46,6 +46,8 @@ func NetworkProtocolPriority(networkProtocol NetworkProtocolType) int {
 		return 1
 	case ITHACA:
 		return 2
+	case JAKARTA:
+		return 3
 	}
 
 	return math.MaxInt

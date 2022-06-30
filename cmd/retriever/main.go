@@ -51,10 +51,11 @@ func main() {
 
 	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
 	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
-	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
-	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
+	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
+	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
 	e.GET("/hangzhounet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
 	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
+	e.GET("/jakartanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
 	e.GET("/", func(c echo.Context) error {
 		snapshots := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
 		responseSnapshot := []snapshot.SnapshotItem{}
