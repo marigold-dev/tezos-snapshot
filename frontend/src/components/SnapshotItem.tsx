@@ -1,4 +1,3 @@
-
 import React from 'react'
 import Card from '@mui/material/Card'
 import CardActions from '@mui/material/CardActions'
@@ -8,49 +7,124 @@ import Button from '@mui/material/Button'
 import { Snapshot } from '../models/Snapshot'
 import { useTheme } from '@mui/material/styles'
 
+const getNetworkName = (snapshot: Snapshot) => {
+  const networkProtocol =
+    snapshot.NetworkProtocol === 'ITHACANET'
+      ? 'GHOSTNET'
+      : snapshot.NetworkProtocol
+
+  return networkProtocol === snapshot.Network
+    ? snapshot.Network
+    : `${snapshot.Network} - ${networkProtocol}`
+}
+
+const getItemHeader = (snapshot: Snapshot) => {
+  return `${getNetworkName(snapshot)} - ${
+    snapshot.SnapshotType
+  } - ${formatBytes(snapshot.Size ?? 0)}`
+}
+
 const SnapshotItem = (props: { snapshot: Snapshot }) => {
   const theme = useTheme()
   return (
-    <Card sx={{
-      width: '80vw',
-      maxWidth: '800px',
-      backgroundColor: theme.palette.primary.main,
-      color: theme.palette.text.primary,
-      boxShadow: 'none',
-      border: 'solid',
-      borderWidth: '1px',
-      borderRadius: '0px'
-    }}>
+    <Card
+      sx={{
+        width: '80vw',
+        maxWidth: '800px',
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.text.primary,
+        boxShadow: 'none',
+        border: 'solid',
+        borderWidth: '1px',
+        borderRadius: '0px',
+      }}
+    >
       <CardContent>
         <Typography sx={{ fontSize: '14px', display: 'flex' }} gutterBottom>
-          <span style={{ flex: '1' }}> {
-          props.snapshot.NetworkProtocol === props.snapshot.Network
-            ? props.snapshot.Network
-            : `${props.snapshot.Network} - ${props.snapshot.NetworkProtocol}`
-          } - {props.snapshot.SnapshotType} - {formatBytes(props.snapshot.Size ?? 0)}</span>
+          <span style={{ flex: '1' }}>{getItemHeader(props.snapshot)} </span>
         </Typography>
-        <Typography style={{ fontWeight: 'bold', fontSize: 'x-small', overflowWrap: 'break-word', color: 'rgb(235, 52, 72)' }} component="div">Block Hash:</Typography>
-        <Typography style={{ fontWeight: 'bold', fontSize: 'larger', overflowWrap: 'break-word' }} component="div">
-           {props.snapshot.Blockhash}
+        <Typography
+          style={{
+            fontWeight: 'bold',
+            fontSize: 'x-small',
+            overflowWrap: 'break-word',
+            color: 'rgb(235, 52, 72)',
+          }}
+          component="div"
+        >
+          Block Hash:
         </Typography>
-        <Typography style={{ fontWeight: 'bold', fontSize: 'x-small', overflowWrap: 'break-word', color: 'rgb(235, 52, 72)' }} component="div">SHA256 Checksum:</Typography>
-        <Typography style={{ fontWeight: 'bold', fontSize: '13px', overflowWrap: 'break-word' }} component="div">
-           {props.snapshot.SHA256Checksum}
+        <Typography
+          style={{
+            fontWeight: 'bold',
+            fontSize: 'larger',
+            overflowWrap: 'break-word',
+          }}
+          component="div"
+        >
+          {props.snapshot.Blockhash}
+        </Typography>
+        <Typography
+          style={{
+            fontWeight: 'bold',
+            fontSize: 'x-small',
+            overflowWrap: 'break-word',
+            color: 'rgb(235, 52, 72)',
+          }}
+          component="div"
+        >
+          SHA256 Checksum:
+        </Typography>
+        <Typography
+          style={{
+            fontWeight: 'bold',
+            fontSize: '13px',
+            overflowWrap: 'break-word',
+          }}
+          component="div"
+        >
+          {props.snapshot.SHA256Checksum}
         </Typography>
       </CardContent>
 
       <CardActions sx={{ justifyContent: 'right' }}>
-        <Button sx={{ color: theme.palette.text.primary, textDecoration: 'underline' }} size="small"
-         href={'https://' + props.snapshot.NetworkProtocol + '.tzkt.io/' + props.snapshot.Blockhash}>
-            TzKT
+        <Button
+          sx={{
+            color: theme.palette.text.primary,
+            textDecoration: 'underline',
+          }}
+          size="small"
+          href={
+            'https://' +
+            props.snapshot.NetworkProtocol +
+            '.tzkt.io/' +
+            props.snapshot.Blockhash
+          }
+        >
+          TzKT
         </Button>
-        <Button sx={{ color: theme.palette.text.primary, textDecoration: 'underline' }} size="small"
-         href={getTzStatsLink(props.snapshot.NetworkProtocol) + props.snapshot.Blockhash}>
-            TzStats
+        <Button
+          sx={{
+            color: theme.palette.text.primary,
+            textDecoration: 'underline',
+          }}
+          size="small"
+          href={
+            getTzStatsLink(props.snapshot.NetworkProtocol) +
+            props.snapshot.Blockhash
+          }
+        >
+          TzStats
         </Button>
-        <Button sx={{ color: theme.palette.text.primary, textDecoration: 'underline' }} size="small"
-         href={props.snapshot.PublicURL}>
-            Download
+        <Button
+          sx={{
+            color: theme.palette.text.primary,
+            textDecoration: 'underline',
+          }}
+          size="small"
+          href={props.snapshot.PublicURL}
+        >
+          Download
         </Button>
       </CardActions>
     </Card>
@@ -59,10 +133,10 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
 
 const getTzStatsLink = (networkProtocol: string) => {
   if (networkProtocol === 'MAINNET') {
-    return ('https://tzstats.com/')
+    return 'https://tzstats.com/'
   }
   const network = networkProtocol.slice(0, -3)
-  return ('https://' + network + '.tzstats.com/')
+  return 'https://' + network + '.tzstats.com/'
 }
 
 const formatBytes = (bytes: number, decimals: number = 2) => {
