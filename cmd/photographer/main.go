@@ -8,12 +8,26 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/go-co-op/gocron"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 	"github.com/samber/lo"
 )
 
 func main() {
+	cron := os.Getenv("CRON_EXPRESSION")
+	if cron == "" {
+		task()
+	} else {
+		log.Println("Waiting for the snapshot job...")
+		s := gocron.NewScheduler(time.UTC)
+		s.Cron("0 0 * * *").Do(task)
+		s.StartBlocking()
+	}
+}
+
+func task() {
+	log.Println("Starting the snapshot job...")
 	start := time.Now()
 	ctx := context.Background()
 	bucketName := os.Getenv("BUCKET_NAME")
