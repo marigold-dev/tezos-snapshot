@@ -32,23 +32,23 @@ const (
 )
 
 const (
-	MAIN     NetworkProtocolType = "MAINNET"
-	JAKARTA  NetworkProtocolType = "JAKARTANET"
-	HANGZHOU NetworkProtocolType = "HANGZHOUNET"
-	ITHACA   NetworkProtocolType = "ITHACANET"
+	MAIN         NetworkProtocolType = "MAINNET"
+	HANGZHOU     NetworkProtocolType = "HANGZHOUNET"
+	ITHACA       NetworkProtocolType = "ITHACANET"
+	JAKARTA      NetworkProtocolType = "JAKARTANET"
+	KATHMANDUNET NetworkProtocolType = "KATHMANDUNET"
 )
 
 func NetworkProtocolPriority(networkProtocol NetworkProtocolType) int {
-	switch networkProtocol {
-	case MAIN:
+	if networkProtocol == ITHACA {
 		return 0
-	case HANGZHOU:
-		return 1
-	case ITHACA:
-		return 2
-	case JAKARTA:
-		return 3
 	}
 
-	return math.MaxInt
+	if networkProtocol == MAIN {
+		return math.MaxInt
+	}
+
+	network := string(networkProtocol)
+	network_char := network[0]
+	return int(network_char)
 }

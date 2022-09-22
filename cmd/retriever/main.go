@@ -56,6 +56,7 @@ func main() {
 	e.GET("/hangzhounet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
 	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
 	e.GET("/jakartanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
+	e.GET("/kathmandunet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.KATHMANDUNET))
 	e.GET("/", func(c echo.Context) error {
 		snapshots := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
 		responseSnapshot := []snapshot.SnapshotItem{}
