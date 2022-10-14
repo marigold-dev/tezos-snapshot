@@ -51,9 +51,10 @@ func main() {
 
 	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
 	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
-	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
+	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.KATHMANDUNET))
 	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
 	e.GET("/hangzhounet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
+	e.GET("/ghostnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
 	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
 	e.GET("/jakartanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
 	e.GET("/kathmandunet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.KATHMANDUNET))
