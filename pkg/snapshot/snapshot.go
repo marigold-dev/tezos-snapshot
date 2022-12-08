@@ -37,6 +37,7 @@ const (
 	ITHACA       NetworkProtocolType = "ITHACANET"
 	JAKARTA      NetworkProtocolType = "JAKARTANET"
 	KATHMANDUNET NetworkProtocolType = "KATHMANDUNET"
+	LIMANET      NetworkProtocolType = "LIMANET"
 )
 
 func NetworkProtocolPriority(networkProtocol NetworkProtocolType) int {
