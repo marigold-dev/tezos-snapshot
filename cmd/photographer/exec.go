@@ -11,7 +11,7 @@ import (
 )
 
 func createSnapshot(rolling bool) {
-	bin := "/usr/local/bin/tezos-node"
+	bin := "/usr/local/bin/octez-node"
 
 	args := []string{"snapshot", "export", "--block", "head~30", "--data-dir", "/var/run/tezos/node/data"}
 
