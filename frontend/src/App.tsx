@@ -12,7 +12,7 @@ export function App() {
   useEffect(() => {
     if (snapshots.length < 1) {
       axios.get(process.env.REACT_APP_BACKEND_URL!).then((request: any) => {
-        setSnapshots(request.data)
+        setSnapshots(request.data.data)
       })
     }
   }, [snapshots, setSnapshots])
@@ -40,4 +40,4 @@ const hasNotPreviousDate = (
   index: number,
   array: Snapshot[],
   snapshot: Snapshot
-) => (index > 0 && !(array[index - 1].Date === snapshot.Date)) || index === 0
+) => (index > 0 && !(array[index - 1].date === snapshot.date)) || index === 0

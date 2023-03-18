@@ -9,19 +9,19 @@ import { useTheme } from '@mui/material/styles'
 
 const getNetworkName = (snapshot: Snapshot) => {
   const networkProtocol =
-    snapshot.NetworkProtocol === 'ITHACANET'
+    snapshot.chain === 'ITHACANET'
       ? 'GHOSTNET'
-      : snapshot.NetworkProtocol
+      : snapshot.chain
 
-  return networkProtocol === snapshot.Network
-    ? snapshot.Network
-    : `${snapshot.Network} - ${networkProtocol}`
+  return networkProtocol === snapshot.network_type
+    ? snapshot.network_type
+    : `${snapshot.network_type} - ${networkProtocol}`
 }
 
 const getItemHeader = (snapshot: Snapshot) => {
   return `${getNetworkName(snapshot)} - ${
-    snapshot.SnapshotType
-  } - ${formatBytes(snapshot.Size ?? 0)}`
+    snapshot.snapshot_type
+  } - ${formatBytes(snapshot.filesize_bytes ?? 0)}`
 }
 
 const SnapshotItem = (props: { snapshot: Snapshot }) => {
@@ -62,7 +62,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
           }}
           component="div"
         >
-          {props.snapshot.Blockhash}
+          {props.snapshot.block_hash}
         </Typography>
         <Typography
           style={{
@@ -83,7 +83,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
           }}
           component="div"
         >
-          {props.snapshot.SHA256Checksum}
+          {props.snapshot.sha256}
         </Typography>
       </CardContent>
 
@@ -96,9 +96,9 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
           size="small"
           href={
             'https://' +
-            props.snapshot.NetworkProtocol +
+            props.snapshot.chain +
             '.tzkt.io/' +
-            props.snapshot.Blockhash
+            props.snapshot.block_hash
           }
         >
           TzKT
@@ -110,8 +110,8 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
           }}
           size="small"
           href={
-            getTzStatsLink(props.snapshot.NetworkProtocol) +
-            props.snapshot.Blockhash
+            getTzStatsLink(props.snapshot.chain) +
+            props.snapshot.block_hash
           }
         >
           TzStats
@@ -122,7 +122,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
             textDecoration: 'underline',
           }}
           size="small"
-          href={props.snapshot.PublicURL}
+          href={props.snapshot.url}
         >
           Download
         </Button>

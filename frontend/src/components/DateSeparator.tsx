@@ -10,7 +10,7 @@ export default function DateSeparator (props: { snapshot: Snapshot; }) {
       textAlign: 'right',
       fontSize: '2.0vh',
       fontStyle: 'italic'
-    }}> {new Date(props.snapshot.Date).toISOString().split('T')[0]}
+    }}> {new Date(props.snapshot.date).toISOString().split('T')[0]}
     </div>
   )
 }

@@ -10,7 +10,7 @@ const hasNotPreviousDate = (
   index: number,
   array: Snapshot[],
   snapshot: Snapshot
-) => (index > 0 && !(array[index - 1].Date === snapshot.Date)) || index === 0
+) => (index > 0 && !(array[index - 1].date === snapshot.date)) || index === 0
 
 export default function Content() {
   const theme = useTheme()
@@ -20,7 +20,7 @@ export default function Content() {
   useEffect(() => {
     if (snapshots.length < 1) {
       axios.get(process.env.REACT_APP_BACKEND_URL!).then((request: any) => {
-        setSnapshots(request.data)
+        setSnapshots(request.data.data)
         setLoading(false)
       })
     }
@@ -52,7 +52,7 @@ export default function Content() {
     <div style={styles.content}>
       {snapshots.map((snapshot, index, array) => (
         <div
-          key={snapshot.PublicURL}
+          key={snapshot.url}
           style={{ paddingBottom: '30px', textAlign: 'left' }}
         >
           {hasNotPreviousDate(index, array, snapshot) && (
