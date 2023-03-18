@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -15,10 +14,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load()
 
 	goCache := cache.New(1*time.Hour, 1*time.Hour)
 	bucketName := os.Getenv("BUCKET_NAME")
