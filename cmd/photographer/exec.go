@@ -8,14 +8,16 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 )
 
-func createSnapshot(rolling bool) {
+func createSnapshot(snapshotType snapshot.SnapshotType) {
 	bin := "/usr/local/bin/octez-node"
 
 	args := []string{"snapshot", "export", "--block", "head~30", "--data-dir", "/var/run/tezos/node/data"}
 
-	if rolling {
+	if snapshotType == snapshot.ROLLING {
 		args = append(args, "--rolling")
 	}
 
@@ -28,7 +30,7 @@ func createSnapshot(rolling bool) {
 	}
 }
 
-func getSnapshotNames(isRolling bool) (string, error) {
+func getSnapshotNames(snapshotType snapshot.SnapshotType) (string, error) {
 	log.Println("Getting snapshot names.")
 	var errBuf, outBuf bytes.Buffer
 	cmd := exec.Command("/bin/ls", "-1a")
@@ -43,7 +45,7 @@ func getSnapshotNames(isRolling bool) (string, error) {
 
 	extension := "full"
 
-	if isRolling {
+	if snapshotType == snapshot.ROLLING {
 		extension = "rolling"
 	}
 

@@ -1,9 +1,10 @@
 module github.com/marigold-dev/tezos-snapshot
 
-go 1.18
+go 1.20
 
 require (
 	cloud.google.com/go/storage v1.18.2
+	github.com/joho/godotenv v1.5.1
 	github.com/samber/lo v1.21.0
 	google.golang.org/api v0.63.0
 )

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
@@ -11,11 +12,12 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func getSnapshotItemsCached(ctx context.Context, goCache *cache.Cache, bucketName string) []snapshot.SnapshotItem {
-	itemsFound, found := goCache.Get("items")
+func getSnapshotResponseCached(ctx context.Context, goCache *cache.Cache, bucketName string) *SnapshotResponse {
+	itemsFound, found := goCache.Get("response")
 	if found {
-		log.Println("Using items from cache...")
-		return itemsFound.([]snapshot.SnapshotItem)
+		log.Println("Using response from cache...")
+		response := (itemsFound.(SnapshotResponse))
+		return &response
 	}
 
 	client, err := storage.NewClient(ctx)
@@ -25,9 +27,16 @@ func getSnapshotItemsCached(ctx context.Context, goCache *cache.Cache, bucketNam
 	defer client.Close()
 
 	snapshotStorage := util.NewSnapshotStorage(client, bucketName)
-	items := snapshotStorage.GetSnapshotItems(ctx)
-	goCache.Set("items", items, cache.DefaultExpiration)
-	return items
+	data := snapshotStorage.GetSnapshotItems(ctx)
+	response := SnapshotResponse{
+		DateGenerated: time.Now().UTC().Format("2006-01-02T15:04:05Z07:00"),
+		Organization:  "Marigold",
+		Schema:        "https://raw.githubusercontent.com/oxheadalpha/tezos-snapshot-metadata-schema/main/tezos-snapshot-metadata.schema.json",
+		Data:          data,
+	}
+
+	goCache.Set("response", response, cache.DefaultExpiration)
+	return &response
 }
 
 func getNewestSnapshot(
@@ -36,12 +45,12 @@ func getNewestSnapshot(
 	bucketName string,
 	network snapshot.NetworkType,
 	snapshotType snapshot.SnapshotType,
-	protocol snapshot.NetworkProtocolType,
+	chain string,
 ) (*snapshot.SnapshotItem, error) {
-	items := getSnapshotItemsCached(ctx, goCache, bucketName)
+	responseCached := getSnapshotResponseCached(ctx, goCache, bucketName)
 
-	for _, item := range items {
-		if item.Network == network && item.SnapshotType == snapshotType && item.NetworkProtocol == protocol {
+	for _, item := range responseCached.Data {
+		if item.NetworkType == network && item.SnapshotType == snapshotType && item.Chain == chain {
 			return &item, nil
 		}
 	}

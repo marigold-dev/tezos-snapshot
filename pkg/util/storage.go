@@ -3,9 +3,12 @@ package util
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
@@ -70,7 +73,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			log.Fatalf("listBucket: unable to list bucket %q: %v \n", s.bucketName, err)
 		}
 
-		isFile, folderName, fileName := isFile(obj)
+		isFile, folderName, fileName := cloudObjIsFile(obj)
 
 		layout := "2006.01.02"
 		date, err := time.Parse(layout, folderName)
@@ -82,37 +85,34 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			continue
 		}
 
-		network := snapshot.NetworkType(snapshot.TESTNET)
-		networkProtocol := snapshot.NetworkProtocolType(strings.Split(strings.Split(fileName, "-")[0], "_")[1])
 		size := obj.Size
 
-		if strings.Contains(obj.Name, "MAINNET") {
-			network = snapshot.NetworkType(snapshot.MAINNET)
-		}
-		snapshotType := snapshot.SnapshotType(snapshot.FULL)
-
-		if strings.Contains(obj.Name, "rolling") {
-			snapshotType = snapshot.SnapshotType(snapshot.ROLLING)
-		}
-
-		splitedByHyphen := strings.Split(obj.Name, "-")
-
-		blocklevel := splitedByHyphen[len(splitedByHyphen)-1]
-		blockhash := splitedByHyphen[len(splitedByHyphen)-2]
+		fileNameInfo := getInfoFromFileName(fileName)
 
 		checksum := obj.Metadata["SHA256CHECKSUM"]
+		timestamp := obj.Metadata["TIMESTAMP"]
+		versionJson, versionExist := obj.Metadata["VERSION"]
+		version := snapshot.TezosVersion{}
+		version.Implementation = "octez"
+		if versionExist {
+			json.Unmarshal([]byte(versionJson), &version)
+		}
 
 		item := snapshot.SnapshotItem{
-			FileName:        fileName,
-			Network:         network,
-			Size:            size,
-			NetworkProtocol: networkProtocol,
-			Date:            date,
-			SnapshotType:    snapshotType,
-			PublicURL:       obj.MediaLink,
-			Blockhash:       blockhash,
-			Blocklevel:      blocklevel,
-			SHA256Checksum:  checksum,
+			FileName:       fileName,
+			NetworkType:    fileNameInfo.NetworkType,
+			Filesize:       FileSize(size),
+			FilesizeBytes:  size,
+			Chain:          fileNameInfo.Chain,
+			Date:           date,
+			BlockTimestamp: timestamp,
+			SnapshotType:   fileNameInfo.SnapshotType,
+			URL:            obj.MediaLink,
+			BlockHash:      fileNameInfo.BlockHash,
+			BlockHeight:    fileNameInfo.FileName,
+			SHA256:         checksum,
+			TezosVersion:   version,
+			ArtifactType:   "tezos-snapshot",
 		}
 
 		items = append(items, item)
@@ -122,8 +122,8 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 	sort.Slice(items, func(i, j int) bool {
 		if items[i].Date == items[j].Date {
 			networkIsPriority :=
-				snapshot.NetworkProtocolPriority(items[i].NetworkProtocol) >
-					snapshot.NetworkProtocolPriority(items[j].NetworkProtocol)
+				snapshot.NetworkProtocolPriority(items[i].Chain) >
+					snapshot.NetworkProtocolPriority(items[j].Chain)
 			return networkIsPriority
 		}
 		dateIsGreater := items[i].Date.After(items[j].Date)
@@ -202,10 +202,34 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 	log.Printf("Blob %q is public now.\n", file.Name())
 
+	fileNameInfo := getInfoFromFileName(file.Name())
+
+	// Request node version
+	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", strings.ToLower(fileNameInfo.Chain)))
+	if err != nil {
+		log.Fatalf("Unable to get node version. %v \n", err)
+	}
+	defer reqVersion.Body.Close()
+	version, err := ioutil.ReadAll(reqVersion.Body)
+	if err != nil {
+		log.Fatalf("Unable to read node version. %v \n", err)
+	}
+
+	// Request node to get the block header
+	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/blocks/%s/header", strings.ToLower(fileNameInfo.Chain), fileNameInfo.BlockHash))
+	if err != nil {
+		log.Fatalf("Unable to get block header. %v \n", err)
+	}
+	defer reqHeader.Body.Close()
+	blockHeaderResponse := snapshot.BlockHeaderResponse{}
+	json.NewDecoder(reqHeader.Body).Decode(&blockHeaderResponse)
+
 	// Add Checksum Metadata
 	objectAttrsToUpdate := storage.ObjectAttrsToUpdate{
 		Metadata: map[string]string{
 			"SHA256CHECKSUM": fmt.Sprintf("%x", hasher.Sum(nil)),
+			"VERSION":        string(version),
+			"TIMESTAMP":      blockHeaderResponse.Timestamp,
 		},
 	}
 
@@ -225,7 +249,7 @@ func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time
 		return file.YearMonth()
 	})
 
-	filesByProtocolPriorityLookUp := lo.GroupBy(files, func(file File) snapshot.NetworkProtocolType {
+	filesByProtocolPriorityLookUp := lo.GroupBy(files, func(file File) string {
 		return file.NetworkProtocol()
 	})
 
@@ -281,11 +305,47 @@ func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time
 	return lo.Filter(files, checkFileMustBeDeleted)
 }
 
-func isFile(file *storage.ObjectAttrs) (bool, string, string) {
-	splitedBySlash := strings.Split(file.Name, "/")
+func cloudObjIsFile(obj *storage.ObjectAttrs) (bool, string, string) {
+	splitedBySlash := strings.Split(obj.Name, "/")
 	if len(splitedBySlash) < 2 {
 		return false, "", ""
 	}
 
 	return (len(splitedBySlash) == 2 && (splitedBySlash[1] != "")), splitedBySlash[0], splitedBySlash[1]
+}
+
+func getInfoFromFileName(fileName string) *FileInfo {
+	chain := strings.Split(strings.Split(fileName, "-")[0], "_")[1]
+
+	networkType := snapshot.NetworkType(snapshot.TESTNET)
+	if strings.Contains(fileName, "MAINNET") {
+		networkType = snapshot.NetworkType(snapshot.MAINNET)
+	}
+	snapshotType := snapshot.SnapshotType(snapshot.FULL)
+
+	if strings.Contains(fileName, "rolling") {
+		snapshotType = snapshot.SnapshotType(snapshot.ROLLING)
+	}
+
+	splitedByHyphen := strings.Split(fileName, "-")
+	blockheight := strings.Split(splitedByHyphen[len(splitedByHyphen)-1], ".")[0]
+	blockhash := splitedByHyphen[len(splitedByHyphen)-2]
+
+	return &FileInfo{
+		FileName:     fileName,
+		NetworkType:  networkType,
+		Chain:        chain,
+		SnapshotType: snapshotType,
+		BlockHeight:  blockheight,
+		BlockHash:    blockhash,
+	}
+}
+
+type FileInfo struct {
+	FileName     string
+	Chain        string
+	NetworkType  snapshot.NetworkType
+	SnapshotType snapshot.SnapshotType
+	BlockHeight  string
+	BlockHash    string
 }

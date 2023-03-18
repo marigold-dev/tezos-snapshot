@@ -1,11 +1,13 @@
 package main
 
 import (
+	"log"
 	"net"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
@@ -13,8 +15,14 @@ import (
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	goCache := cache.New(1*time.Hour, 1*time.Hour)
 	bucketName := os.Getenv("BUCKET_NAME")
+	println(bucketName)
 	timeout := time.Duration(5) * time.Second
 	transport := &http.Transport{
 		ResponseHeaderTimeout: timeout,
@@ -33,45 +41,45 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	downloadableHandlerBuilder := func(network snapshot.NetworkType, protocol snapshot.NetworkProtocolType) func(c echo.Context) error {
+	downloadableHandlerBuilder := func(network snapshot.NetworkType, chain string) func(c echo.Context) error {
 		return func(c echo.Context) error {
 			snapshotType := snapshot.ROLLING
 			if c.Param("type") == "full" {
 				snapshotType = snapshot.FULL
 			}
 
-			snapshot, err := getNewestSnapshot(c.Request().Context(), goCache, bucketName, network, snapshotType, protocol)
+			snapshot, err := getNewestSnapshot(c.Request().Context(), goCache, bucketName, network, snapshotType, chain)
 			if err != nil {
 				return err
 			}
 
-			return streamFile(c, client, snapshot.FileName, snapshot.PublicURL)
+			return streamFile(c, client, snapshot.FileName, snapshot.URL)
 		}
 	}
 
-	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
-	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET, snapshot.MAIN))
-	e.GET("/testnet", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.LIMANET))
-	e.GET("/testnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.LIMANET))
-	e.GET("/hangzhounet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.HANGZHOU))
-	e.GET("/ghostnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
-	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.ITHACA))
-	e.GET("/jakartanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.JAKARTA))
-	e.GET("/kathmandunet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.KATHMANDUNET))
-	e.GET("/limanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, snapshot.LIMANET))
+	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET, "MAINNET"))
+	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET, "MAINNET"))
+	e.GET("/hangzhounet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "HANGZHOUNET"))
+	e.GET("/ghostnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "GHOSTNET"))
+	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "ITHACANET"))
+	e.GET("/jakartanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "JAKARTA"))
+	e.GET("/kathmandunet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "KATHMANDUNET"))
+	e.GET("/limanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "LIMANET"))
+	e.GET("/mumbainet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "MUMBAINET"))
 	e.GET("/", func(c echo.Context) error {
-		snapshots := getSnapshotItemsCached(c.Request().Context(), goCache, bucketName)
-		responseSnapshot := []snapshot.SnapshotItem{}
-
-		for _, i := range snapshots {
-			responseSnapshot = append(responseSnapshot, i)
-		}
-
-		return c.JSON(http.StatusOK, responseSnapshot)
+		responseCached := getSnapshotResponseCached(c.Request().Context(), goCache, bucketName)
+		return c.JSON(http.StatusOK, &responseCached)
 	})
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "UP")
 	})
 
 	e.Logger.Fatal(e.Start(":8080"))
+}
+
+type SnapshotResponse struct {
+	DateGenerated string               `json:"date_generated"`
+	Organization  string                  `json:"organization"`
+	Schema        string                  `json:"$schema"`
+	Data          []snapshot.SnapshotItem `json:"data"`
 }

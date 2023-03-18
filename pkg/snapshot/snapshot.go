@@ -5,22 +5,51 @@ import (
 	"time"
 )
 
+type BlockHeaderResponse struct {
+	Level     int    `json:"level"`
+	Proto     int    `json:"proto"`
+	Hash      string `json:"hash"`
+	Timestamp string `json:"timestamp"`
+	ChainID   string `json:"chain_id"`
+	Signature string `json:"signature"`
+}
+
 type SnapshotItem struct {
-	FileName        string
-	Network         NetworkType
-	NetworkProtocol NetworkProtocolType
-	Date            time.Time
-	SnapshotType    SnapshotType
-	Blockhash       string
-	Blocklevel      string
-	PublicURL       string
-	Size            int64
-	SHA256Checksum  string
+	FileName       string       `json:"file_name"`
+	Chain          string       `json:"chain"`
+	BlockTimestamp string       `json:"block_timestamp"`
+	BlockHash      string       `json:"block_hash"`
+	BlockHeight    string       `json:"block_height"`
+	URL            string       `json:"url"`
+	Filesize       string       `json:"filesize"`
+	SHA256         string       `json:"sha256"`
+	ArtifactType   string       `json:"artifact_type"`
+	FilesizeBytes  int64        `json:"filesize_bytes"`
+	Date           time.Time    `json:"date"`
+	NetworkType    NetworkType  `json:"network_type"`
+	SnapshotType   SnapshotType `json:"snapshot_type"`
+	TezosVersion   TezosVersion `json:"tezos_version"`
+}
+
+type TezosVersion struct {
+	Implementation string     `json:"implementation"`
+	Version        Version    `json:"version"`
+	CommitInfo     CommitInfo `json:"commit_info"`
+}
+
+type Version struct {
+	Major          int    `json:"major"`
+	Minor          int    `json:"minor"`
+	AdditionalInfo string `json:"additional_info"`
+}
+
+type CommitInfo struct {
+	CommitHash string `json:"commit_hash"`
+	CommitDate string `json:"commit_date"`
 }
 
 type SnapshotType string
 type NetworkType string
-type NetworkProtocolType string
 
 const (
 	ROLLING SnapshotType = "ROLLING"
@@ -31,25 +60,16 @@ const (
 	TESTNET NetworkType = "TESTNET"
 )
 
-const (
-	MAIN         NetworkProtocolType = "MAINNET"
-	HANGZHOU     NetworkProtocolType = "HANGZHOUNET"
-	ITHACA       NetworkProtocolType = "ITHACANET"
-	JAKARTA      NetworkProtocolType = "JAKARTANET"
-	KATHMANDUNET NetworkProtocolType = "KATHMANDUNET"
-	LIMANET      NetworkProtocolType = "LIMANET"
-)
-
-func NetworkProtocolPriority(networkProtocol NetworkProtocolType) int {
-	if networkProtocol == ITHACA {
+func NetworkProtocolPriority(chain string) int {
+	if chain == "ITHACA" {
 		return 0
 	}
 
-	if networkProtocol == MAIN {
+	if chain == "MAIN" {
 		return math.MaxInt
 	}
 
-	network := string(networkProtocol)
+	network := chain
 	network_char := network[0]
 	return int(network_char)
 }

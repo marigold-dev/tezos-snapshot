@@ -9,12 +9,18 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/go-co-op/gocron"
+	"github.com/joho/godotenv"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 	"github.com/samber/lo"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	cron := os.Getenv("CRON_EXPRESSION")
 	if cron == "" {
 		task()
@@ -33,7 +39,7 @@ func task() {
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
 	maxMonths := util.GetEnvInt("MAX_MONTHS", 6)
-	network := snapshot.NetworkProtocolType(strings.ToUpper(os.Getenv("NETWORK")))
+	network := strings.ToUpper(os.Getenv("NETWORK"))
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
@@ -51,37 +57,31 @@ func task() {
 
 	snapshotStorage := util.NewSnapshotStorage(client, bucketName)
 
-	// Check if the today rolling snapshot already exists
-	execute(ctx, snapshotStorage, true, network)
+	// Check if today the rolling snapshot already exists
+	execute(ctx, snapshotStorage, snapshot.ROLLING, network)
 
-	// Check if the today full snapshot already exists
-	execute(ctx, snapshotStorage, false, network)
+	// Check if today the full snapshot already exists
+	execute(ctx, snapshotStorage, snapshot.FULL, network)
 
 	snapshotStorage.DeleteExpiredSnapshots(ctx, maxDays, maxMonths)
 
 	log.Printf("Snapshot job took %s", time.Since(start))
 }
 
-func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, rolling bool, network snapshot.NetworkProtocolType) {
+func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, snapshotType snapshot.SnapshotType, chain string) {
 	todayItems := snapshotStorage.GetTodaySnapshotsItems(ctx)
 
-	snapshotType := snapshot.FULL
-
-	if rolling {
-		snapshotType = snapshot.ROLLING
-	}
-
 	alreadyExist := lo.SomeBy(todayItems, func(item snapshot.SnapshotItem) bool {
-		return item.NetworkProtocol == network && item.SnapshotType == snapshotType
+		return item.Chain == chain && item.SnapshotType == snapshotType
 	})
 
 	if alreadyExist {
-		log.Printf("Already exist a today snapshot with %q type. \n", network)
+		log.Printf("Already exist a today snapshot with %s type. \n", chain)
 		return
 	}
 
-	createSnapshot(rolling)
-	snapshotfileName, err := getSnapshotNames(rolling)
+	createSnapshot(snapshotType)
+	snapshotfileName, err := getSnapshotNames(snapshotType)
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}

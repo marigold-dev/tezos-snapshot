@@ -32,8 +32,8 @@ func (f *File) Date() time.Time {
 	return date
 }
 
-func (f *File) NetworkProtocol() snapshot.NetworkProtocolType {
-	return snapshot.NetworkProtocolType(strings.Split(strings.Split(f.Name, "-")[0], "_")[1])
+func (f *File) NetworkProtocol() string {
+	return strings.Split(strings.Split(f.Name, "-")[0], "_")[1]
 }
 
 func (f *File) SnapshotType() snapshot.SnapshotType {
