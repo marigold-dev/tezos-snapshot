@@ -40,8 +40,8 @@ func getSnapshotNames(snapshotType snapshot.SnapshotType) (string, error) {
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
-	snapshotfileNames := strings.Split(outBuf.String(), "\n")
-	log.Printf("All files found: %v \n", snapshotfileNames)
+	snapshotfilenames := strings.Split(outBuf.String(), "\n")
+	log.Printf("All files found: %v \n", snapshotfilenames)
 
 	extension := "full"
 
@@ -49,10 +49,10 @@ func getSnapshotNames(snapshotType snapshot.SnapshotType) (string, error) {
 		extension = "rolling"
 	}
 
-	for _, fileName := range snapshotfileNames {
-		if strings.Contains(fileName, extension) {
-			log.Printf("Snapshot file found is: %q. \n", fileName)
-			return fileName, nil
+	for _, filename := range snapshotfilenames {
+		if strings.Contains(filename, extension) {
+			log.Printf("Snapshot file found is: %q. \n", filename)
+			return filename, nil
 		}
 	}
 

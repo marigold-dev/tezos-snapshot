@@ -49,7 +49,7 @@ func main() {
 				return err
 			}
 
-			return streamFile(c, client, snapshot.FileName, snapshot.URL)
+			return streamFile(c, client, snapshot.Filename, snapshot.URL)
 		}
 	}
 	api := func(c echo.Context) error {
@@ -76,8 +76,8 @@ func main() {
 }
 
 type SnapshotResponse struct {
-	DateGenerated string               `json:"date_generated"`
-	Organization  string                  `json:"organization"`
+	DateGenerated string                  `json:"date_generated"`
+	Org           string                  `json:"org"`
 	Schema        string                  `json:"$schema"`
 	Data          []snapshot.SnapshotItem `json:"data"`
 }

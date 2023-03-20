@@ -78,9 +78,9 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, snapsho
 	}
 
 	createSnapshot(snapshotType)
-	snapshotfileName, err := getSnapshotNames(snapshotType)
+	snapshotfilename, err := getSnapshotNames(snapshotType)
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
-	snapshotStorage.EphemeralUpload(ctx, snapshotfileName)
+	snapshotStorage.EphemeralUpload(ctx, snapshotfilename)
 }

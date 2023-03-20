@@ -15,7 +15,7 @@ type BlockHeaderResponse struct {
 }
 
 type SnapshotItem struct {
-	FileName       string       `json:"file_name"`
+	Filename       string       `json:"filename"`
 	Chain          string       `json:"chain"`
 	BlockTimestamp string       `json:"block_timestamp"`
 	BlockHash      string       `json:"block_hash"`

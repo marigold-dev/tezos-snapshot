@@ -30,7 +30,7 @@ func getSnapshotResponseCached(ctx context.Context, goCache *cache.Cache, bucket
 	data := snapshotStorage.GetSnapshotItems(ctx)
 	response := SnapshotResponse{
 		DateGenerated: time.Now().UTC().Format("2006-01-02T15:04:05Z07:00"),
-		Organization:  "Marigold",
+		Org:           "Marigold",
 		Schema:        "https://raw.githubusercontent.com/oxheadalpha/tezos-snapshot-metadata-schema/main/tezos-snapshot-metadata.schema.json",
 		Data:          data,
 	}

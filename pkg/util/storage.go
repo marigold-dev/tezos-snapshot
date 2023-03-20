@@ -29,22 +29,22 @@ func NewSnapshotStorage(client *storage.Client, bucketName string) *SnapshotStor
 	return &SnapshotStorage{client: client, bucketName: bucketName}
 }
 
-func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, fileName string) {
-	log.Printf("Opening snapshot file %q.", fileName)
-	snapshotFile, err := os.Open(fileName)
+func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, filename string) {
+	log.Printf("Opening snapshot file %q.", filename)
+	snapshotFile, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("os.Open: %v", err)
 	}
 	defer snapshotFile.Close()
 
-	log.Printf("Uploading %q snapshot to Google Clound Storage.", fileName)
+	log.Printf("Uploading %q snapshot to Google Clound Storage.", filename)
 	err = s.uploadSnapshot(ctx, snapshotFile)
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
 
-	log.Printf("Deleting snapshot file %q.", fileName)
-	err = os.Remove(fileName)
+	log.Printf("Deleting snapshot file %q.", filename)
+	err = os.Remove(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			log.Fatalf("listBucket: unable to list bucket %q: %v \n", s.bucketName, err)
 		}
 
-		isFile, folderName, fileName := cloudObjIsFile(obj)
+		isFile, folderName, filename := cloudObjIsFile(obj)
 
 		layout := "2006.01.02"
 		date, err := time.Parse(layout, folderName)
@@ -87,7 +87,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 
 		size := obj.Size
 
-		fileNameInfo := getInfoFromFileName(fileName)
+		filenameInfo := getInfoFromfilename(filename)
 
 		checksum := obj.Metadata["SHA256CHECKSUM"]
 		timestamp := obj.Metadata["TIMESTAMP"]
@@ -99,17 +99,17 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 		}
 
 		item := snapshot.SnapshotItem{
-			FileName:       fileName,
-			NetworkType:    fileNameInfo.NetworkType,
+			Filename:       filename,
+			NetworkType:    filenameInfo.NetworkType,
 			Filesize:       FileSize(size),
 			FilesizeBytes:  size,
-			Chain:          fileNameInfo.Chain,
+			Chain:          filenameInfo.Chain,
 			Date:           date,
 			BlockTimestamp: timestamp,
-			SnapshotType:   fileNameInfo.SnapshotType,
+			SnapshotType:   filenameInfo.SnapshotType,
 			URL:            obj.MediaLink,
-			BlockHash:      fileNameInfo.BlockHash,
-			BlockHeight:    fileNameInfo.FileName,
+			BlockHash:      filenameInfo.BlockHash,
+			BlockHeight:    filenameInfo.Filename,
 			SHA256:         checksum,
 			TezosVersion:   version,
 			ArtifactType:   "tezos-snapshot",
@@ -176,9 +176,9 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 
 	log.Printf("Current Date is %q.\n", currentDate)
 
-	fileName := currentDate + "/" + file.Name()
+	filename := currentDate + "/" + file.Name()
 
-	objectHandler := s.client.Bucket(s.bucketName).Object(fileName)
+	objectHandler := s.client.Bucket(s.bucketName).Object(filename)
 
 	objWriter := objectHandler.NewWriter(ctx)
 
@@ -202,10 +202,10 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 	log.Printf("Blob %q is public now.\n", file.Name())
 
-	fileNameInfo := getInfoFromFileName(file.Name())
+	filenameInfo := getInfoFromfilename(file.Name())
 
 	// Request node version
-	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", strings.ToLower(fileNameInfo.Chain)))
+	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", strings.ToLower(filenameInfo.Chain)))
 	if err != nil {
 		log.Fatalf("Unable to get node version. %v \n", err)
 	}
@@ -216,7 +216,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 
 	// Request node to get the block header
-	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/blocks/%s/header", strings.ToLower(fileNameInfo.Chain), fileNameInfo.BlockHash))
+	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/blocks/%s/header", strings.ToLower(filenameInfo.Chain), filenameInfo.BlockHash))
 	if err != nil {
 		log.Fatalf("Unable to get block header. %v \n", err)
 	}
@@ -314,25 +314,25 @@ func cloudObjIsFile(obj *storage.ObjectAttrs) (bool, string, string) {
 	return (len(splitedBySlash) == 2 && (splitedBySlash[1] != "")), splitedBySlash[0], splitedBySlash[1]
 }
 
-func getInfoFromFileName(fileName string) *FileInfo {
-	chain := strings.Split(strings.Split(fileName, "-")[0], "_")[1]
+func getInfoFromfilename(filename string) *FileInfo {
+	chain := strings.Split(strings.Split(filename, "-")[0], "_")[1]
 
 	networkType := snapshot.NetworkType(snapshot.TESTNET)
-	if strings.Contains(fileName, "MAINNET") {
+	if strings.Contains(filename, "MAINNET") {
 		networkType = snapshot.NetworkType(snapshot.MAINNET)
 	}
 	snapshotType := snapshot.SnapshotType(snapshot.FULL)
 
-	if strings.Contains(fileName, "rolling") {
+	if strings.Contains(filename, "rolling") {
 		snapshotType = snapshot.SnapshotType(snapshot.ROLLING)
 	}
 
-	splitedByHyphen := strings.Split(fileName, "-")
+	splitedByHyphen := strings.Split(filename, "-")
 	blockheight := strings.Split(splitedByHyphen[len(splitedByHyphen)-1], ".")[0]
 	blockhash := splitedByHyphen[len(splitedByHyphen)-2]
 
 	return &FileInfo{
-		FileName:     fileName,
+		Filename:     filename,
 		NetworkType:  networkType,
 		Chain:        chain,
 		SnapshotType: snapshotType,
@@ -342,7 +342,7 @@ func getInfoFromFileName(fileName string) *FileInfo {
 }
 
 type FileInfo struct {
-	FileName     string
+	Filename     string
 	Chain        string
 	NetworkType  snapshot.NetworkType
 	SnapshotType snapshot.SnapshotType
