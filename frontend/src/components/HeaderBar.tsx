@@ -59,19 +59,19 @@ export default function HeaderBar () {
       {!isMobile() &&
         <span style={{ display: 'flex', alignItems: 'center' }}>
           <Separator></Separator>
-          <SnapshotLink url="https://snapshot-api.tezos.marigold.dev/testnet/full">
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/testnet/full">
             FULL TESTNET
           </SnapshotLink>
           <Separator></Separator>
-          <SnapshotLink url="https://snapshot-api.tezos.marigold.dev/testnet">
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/testnet">
             ROLLING TESTNET
           </SnapshotLink>
           <Separator></Separator>
-          <SnapshotLink url="https://snapshot-api.tezos.marigold.dev/mainnet/full">
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/mainnet/full">
             FULL MAINNET
           </SnapshotLink>
           <Separator></Separator>
-          <SnapshotLink url="https://snapshot-api.tezos.marigold.dev/mainnet">
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/mainnet">
             ROLLING MAINNET
           </SnapshotLink>
           <Separator></Separator>
