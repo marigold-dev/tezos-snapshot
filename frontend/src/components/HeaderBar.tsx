@@ -59,6 +59,10 @@ export default function HeaderBar () {
       {!isMobile() &&
         <span style={{ display: 'flex', alignItems: 'center' }}>
           <Separator></Separator>
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api">
+            API
+          </SnapshotLink>
+          <Separator></Separator>
           <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/testnet/full">
             FULL TESTNET
           </SnapshotLink>
