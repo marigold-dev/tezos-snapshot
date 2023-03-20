@@ -52,6 +52,10 @@ func main() {
 			return streamFile(c, client, snapshot.FileName, snapshot.URL)
 		}
 	}
+	api := func(c echo.Context) error {
+		responseCached := getSnapshotResponseCached(c.Request().Context(), goCache, bucketName)
+		return c.JSON(http.StatusOK, &responseCached)
+	}
 
 	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET, "MAINNET"))
 	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET, "MAINNET"))
@@ -62,10 +66,8 @@ func main() {
 	e.GET("/kathmandunet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "KATHMANDUNET"))
 	e.GET("/limanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "LIMANET"))
 	e.GET("/mumbainet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "MUMBAINET"))
-	e.GET("/", func(c echo.Context) error {
-		responseCached := getSnapshotResponseCached(c.Request().Context(), goCache, bucketName)
-		return c.JSON(http.StatusOK, &responseCached)
-	})
+	e.GET("/", api)
+	e.GET("/tezos-snapshots.json", api)
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "UP")
 	})
