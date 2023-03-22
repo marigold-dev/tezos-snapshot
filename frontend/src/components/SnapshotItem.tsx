@@ -9,9 +9,9 @@ import { useTheme } from '@mui/material/styles'
 
 const getNetworkName = (snapshot: Snapshot) => {
   const networkProtocol =
-    snapshot.chain === 'ITHACANET'
+    snapshot.chain_name === 'ITHACANET'
       ? 'GHOSTNET'
-      : snapshot.chain
+      : snapshot.chain_name
 
   return networkProtocol === snapshot.network_type
     ? snapshot.network_type
@@ -96,7 +96,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
           size="small"
           href={
             'https://' +
-            props.snapshot.chain +
+            props.snapshot.chain_name +
             '.tzkt.io/' +
             props.snapshot.block_hash
           }
@@ -110,7 +110,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
           }}
           size="small"
           href={
-            getTzStatsLink(props.snapshot.chain) +
+            getTzStatsLink(props.snapshot.chain_name) +
             props.snapshot.block_hash
           }
         >
