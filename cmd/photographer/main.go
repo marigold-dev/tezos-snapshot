@@ -69,7 +69,7 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, snapsho
 	todayItems := snapshotStorage.GetTodaySnapshotsItems(ctx)
 
 	alreadyExist := lo.SomeBy(todayItems, func(item snapshot.SnapshotItem) bool {
-		return item.Chain == chain && item.SnapshotType == snapshotType
+		return item.ChainName == chain && item.SnapshotType == snapshotType
 	})
 
 	if alreadyExist {

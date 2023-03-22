@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -96,6 +97,8 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 		version.Implementation = "octez"
 		if versionExist {
 			json.Unmarshal([]byte(versionJson), &version)
+		} else {
+			version.Version.Major = 7
 		}
 
 		item := snapshot.SnapshotItem{
@@ -103,16 +106,17 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			NetworkType:    filenameInfo.NetworkType,
 			Filesize:       FileSize(size),
 			FilesizeBytes:  size,
-			Chain:          filenameInfo.Chain,
+			ChainName:      filenameInfo.ChainName,
 			Date:           date,
 			BlockTimestamp: timestamp,
 			SnapshotType:   filenameInfo.SnapshotType,
 			URL:            obj.MediaLink,
 			BlockHash:      filenameInfo.BlockHash,
-			BlockHeight:    filenameInfo.Filename,
+			BlockHeight:    filenameInfo.BlockHeight,
 			SHA256:         checksum,
 			TezosVersion:   version,
 			ArtifactType:   "tezos-snapshot",
+			HistoryMode:    strings.ToLower(string(filenameInfo.SnapshotType)),
 		}
 
 		items = append(items, item)
@@ -122,8 +126,8 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 	sort.Slice(items, func(i, j int) bool {
 		if items[i].Date == items[j].Date {
 			networkIsPriority :=
-				snapshot.NetworkProtocolPriority(items[i].Chain) >
-					snapshot.NetworkProtocolPriority(items[j].Chain)
+				snapshot.NetworkProtocolPriority(items[i].ChainName) >
+					snapshot.NetworkProtocolPriority(items[j].ChainName)
 			return networkIsPriority
 		}
 		dateIsGreater := items[i].Date.After(items[j].Date)
@@ -205,7 +209,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	filenameInfo := getInfoFromfilename(file.Name())
 
 	// Request node version
-	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", strings.ToLower(filenameInfo.Chain)))
+	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", strings.ToLower(filenameInfo.ChainName)))
 	if err != nil {
 		log.Fatalf("Unable to get node version. %v \n", err)
 	}
@@ -216,7 +220,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 
 	// Request node to get the block header
-	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/blocks/%s/header", strings.ToLower(filenameInfo.Chain), filenameInfo.BlockHash))
+	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/blocks/%s/header", strings.ToLower(filenameInfo.ChainName), filenameInfo.BlockHash))
 	if err != nil {
 		log.Fatalf("Unable to get block header. %v \n", err)
 	}
@@ -315,7 +319,7 @@ func cloudObjIsFile(obj *storage.ObjectAttrs) (bool, string, string) {
 }
 
 func getInfoFromfilename(filename string) *FileInfo {
-	chain := strings.Split(strings.Split(filename, "-")[0], "_")[1]
+	chainName := strings.Split(strings.Split(filename, "-")[0], "_")[1]
 
 	networkType := snapshot.NetworkType(snapshot.TESTNET)
 	if strings.Contains(filename, "MAINNET") {
@@ -328,13 +332,16 @@ func getInfoFromfilename(filename string) *FileInfo {
 	}
 
 	splitedByHyphen := strings.Split(filename, "-")
-	blockheight := strings.Split(splitedByHyphen[len(splitedByHyphen)-1], ".")[0]
+	blockheight, err := strconv.Atoi(strings.Split(splitedByHyphen[len(splitedByHyphen)-1], ".")[0])
+	if err != nil {
+		log.Fatalf("Unable to parse blockheight. %v \n", err)
+	}
 	blockhash := splitedByHyphen[len(splitedByHyphen)-2]
 
 	return &FileInfo{
 		Filename:     filename,
 		NetworkType:  networkType,
-		Chain:        chain,
+		ChainName:    chainName,
 		SnapshotType: snapshotType,
 		BlockHeight:  blockheight,
 		BlockHash:    blockhash,
@@ -343,9 +350,9 @@ func getInfoFromfilename(filename string) *FileInfo {
 
 type FileInfo struct {
 	Filename     string
-	Chain        string
+	ChainName    string
 	NetworkType  snapshot.NetworkType
 	SnapshotType snapshot.SnapshotType
-	BlockHeight  string
+	BlockHeight  int
 	BlockHash    string
 }

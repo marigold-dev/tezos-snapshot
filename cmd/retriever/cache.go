@@ -31,7 +31,7 @@ func getSnapshotResponseCached(ctx context.Context, goCache *cache.Cache, bucket
 	response := SnapshotResponse{
 		DateGenerated: time.Now().UTC().Format("2006-01-02T15:04:05Z07:00"),
 		Org:           "Marigold",
-		Schema:        "https://raw.githubusercontent.com/oxheadalpha/tezos-snapshot-metadata-schema/main/tezos-snapshot-metadata.schema.json",
+		Schema:        "https://raw.githubusercontent.com/oxheadalpha/tezos-snapshot-metadata-schema/9e48a543fbe0[…]89f1de65f510b8e41ee0/tezos-snapshot-metadata.schema.json",
 		Data:          data,
 	}
 
@@ -45,12 +45,12 @@ func getNewestSnapshot(
 	bucketName string,
 	network snapshot.NetworkType,
 	snapshotType snapshot.SnapshotType,
-	chain string,
+	chainName string,
 ) (*snapshot.SnapshotItem, error) {
 	responseCached := getSnapshotResponseCached(ctx, goCache, bucketName)
 
 	for _, item := range responseCached.Data {
-		if item.NetworkType == network && item.SnapshotType == snapshotType && item.Chain == chain {
+		if item.NetworkType == network && item.SnapshotType == snapshotType && item.ChainName == chainName {
 			return &item, nil
 		}
 	}

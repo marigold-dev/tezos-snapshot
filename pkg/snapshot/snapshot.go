@@ -16,14 +16,15 @@ type BlockHeaderResponse struct {
 
 type SnapshotItem struct {
 	Filename       string       `json:"filename"`
-	Chain          string       `json:"chain"`
+	ChainName      string       `json:"chain_name"`
 	BlockTimestamp string       `json:"block_timestamp"`
 	BlockHash      string       `json:"block_hash"`
-	BlockHeight    string       `json:"block_height"`
+	BlockHeight    int          `json:"block_height"`
 	URL            string       `json:"url"`
 	Filesize       string       `json:"filesize"`
 	SHA256         string       `json:"sha256"`
 	ArtifactType   string       `json:"artifact_type"`
+	HistoryMode    string       `json:"history_mode"`
 	FilesizeBytes  int64        `json:"filesize_bytes"`
 	Date           time.Time    `json:"date"`
 	NetworkType    NetworkType  `json:"network_type"`
