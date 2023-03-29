@@ -43,17 +43,16 @@ func getNewestSnapshot(
 	ctx context.Context,
 	goCache *cache.Cache,
 	bucketName string,
-	network snapshot.NetworkType,
-	snapshotType snapshot.SnapshotType,
+	historyMode snapshot.HistoryModeType,
 	chainName string,
 ) (*snapshot.SnapshotItem, error) {
 	responseCached := getSnapshotResponseCached(ctx, goCache, bucketName)
 
 	for _, item := range responseCached.Data {
-		if item.NetworkType == network && item.SnapshotType == snapshotType && item.ChainName == chainName {
+		if item.HistoryMode == historyMode && item.ChainName == chainName {
 			return &item, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Snapshot item from %s network not found", network)
+	return nil, fmt.Errorf("Snapshot item not found")
 }

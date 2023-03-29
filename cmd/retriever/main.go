@@ -37,14 +37,14 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	downloadableHandlerBuilder := func(network snapshot.NetworkType, chain string) func(c echo.Context) error {
+	downloadableHandlerBuilder := func(chain string) func(c echo.Context) error {
 		return func(c echo.Context) error {
-			snapshotType := snapshot.ROLLING
+			historyMode := snapshot.ROLLING
 			if c.Param("type") == "full" {
-				snapshotType = snapshot.FULL
+				historyMode = snapshot.FULL
 			}
 
-			snapshot, err := getNewestSnapshot(c.Request().Context(), goCache, bucketName, network, snapshotType, chain)
+			snapshot, err := getNewestSnapshot(c.Request().Context(), goCache, bucketName, historyMode, chain)
 			if err != nil {
 				return err
 			}
@@ -57,15 +57,15 @@ func main() {
 		return c.JSON(http.StatusOK, &responseCached)
 	}
 
-	e.GET("/mainnet", downloadableHandlerBuilder(snapshot.MAINNET, "MAINNET"))
-	e.GET("/mainnet/:type", downloadableHandlerBuilder(snapshot.MAINNET, "MAINNET"))
-	e.GET("/hangzhounet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "HANGZHOUNET"))
-	e.GET("/ghostnet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "GHOSTNET"))
-	e.GET("/ithacanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "ITHACANET"))
-	e.GET("/jakartanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "JAKARTA"))
-	e.GET("/kathmandunet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "KATHMANDUNET"))
-	e.GET("/limanet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "LIMANET"))
-	e.GET("/mumbainet/:type", downloadableHandlerBuilder(snapshot.TESTNET, "MUMBAINET"))
+	e.GET("/mainnet", downloadableHandlerBuilder("mainnet"))
+	e.GET("/mainnet/:type", downloadableHandlerBuilder("mainnet"))
+	e.GET("/hangzhounet/:type", downloadableHandlerBuilder("hangzhounet"))
+	e.GET("/ghostnet/:type", downloadableHandlerBuilder("ghostnet"))
+	e.GET("/ithacanet/:type", downloadableHandlerBuilder("ithacanet"))
+	e.GET("/jakartanet/:type", downloadableHandlerBuilder("jakarta"))
+	e.GET("/kathmandunet/:type", downloadableHandlerBuilder("kathmandunet"))
+	e.GET("/limanet/:type", downloadableHandlerBuilder("limanet"))
+	e.GET("/mumbainet/:type", downloadableHandlerBuilder("mumbainet"))
 	e.GET("/", api)
 	e.GET("/tezos-snapshots.json", api)
 	e.GET("/health", func(c echo.Context) error {

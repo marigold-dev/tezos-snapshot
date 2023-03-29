@@ -8,20 +8,19 @@ import { Snapshot } from '../models/Snapshot'
 import { useTheme } from '@mui/material/styles'
 
 const getNetworkName = (snapshot: Snapshot) => {
-  const networkProtocol =
-    snapshot.chain_name === 'ITHACANET'
-      ? 'GHOSTNET'
-      : snapshot.chain_name
+  const networkProtocol = (
+    snapshot.chain_name === 'ithacanet' ? 'ghostnet' : snapshot.chain_name
+  ).toUpperCase()
 
-  return networkProtocol === snapshot.network_type
-    ? snapshot.network_type
-    : `${snapshot.network_type} - ${networkProtocol}`
+  return networkProtocol === snapshot.history_mode
+    ? snapshot.history_mode
+    : `${snapshot.history_mode} - ${networkProtocol}`
 }
 
 const getItemHeader = (snapshot: Snapshot) => {
   return `${getNetworkName(snapshot)} - ${
-    snapshot.snapshot_type
-  } - ${formatBytes(snapshot.filesize_bytes ?? 0)}`
+    snapshot.history_mode
+  } - ${formatBytes(snapshot.filesize_bytes ?? 0)}`.toUpperCase()
 }
 
 const SnapshotItem = (props: { snapshot: Snapshot }) => {
@@ -132,7 +131,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
 }
 
 const getTzStatsLink = (networkProtocol: string) => {
-  if (networkProtocol === 'MAINNET') {
+  if (networkProtocol === 'mainnet') {
     return 'https://tzstats.com/'
   }
   const network = networkProtocol.slice(0, -3)

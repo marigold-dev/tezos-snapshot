@@ -1,13 +1,13 @@
-export type SnapshotType = 'ROLLING' | 'FULL'
-export type NetworkType = 'MAINNET' | 'TESTNET'
-export type NetworkProtocolType = 'MAINNET' | 'HANGZHOUNET' | 'ITHACANET'
+export type ArtifactType = 'tezos-snapshot' | 'tarball'
+export type HistoryModeType = 'rolling' | 'full' | 'archive'
+export type NetworkProtocolType = 'mainnet' | 'ithacanet' | string
 
 export type Snapshot = {
   file_name: string
-  network_type: NetworkType
   chain_name: NetworkProtocolType
   date: Date
-  snapshot_type: SnapshotType
+  artifact_type: ArtifactType
+  history_mode: HistoryModeType
   block_hash: string
   sha256: string
   block_height: number

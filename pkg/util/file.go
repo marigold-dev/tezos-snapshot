@@ -36,12 +36,12 @@ func (f *File) NetworkProtocol() string {
 	return strings.Split(strings.Split(f.Name, "-")[0], "_")[1]
 }
 
-func (f *File) SnapshotType() snapshot.SnapshotType {
-	snapshotType := snapshot.SnapshotType(snapshot.FULL)
+func (f *File) HistoryMode() snapshot.HistoryModeType {
+	historyMode := snapshot.HistoryModeType(snapshot.FULL)
 
 	if strings.Contains(f.Name, "rolling") {
-		snapshotType = snapshot.SnapshotType(snapshot.ROLLING)
+		historyMode = snapshot.HistoryModeType(snapshot.ROLLING)
 	}
 
-	return snapshotType
+	return historyMode
 }

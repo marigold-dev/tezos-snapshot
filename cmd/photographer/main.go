@@ -65,11 +65,11 @@ func task() {
 	log.Printf("Snapshot job took %s", time.Since(start))
 }
 
-func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, snapshotType snapshot.SnapshotType, chain string) {
+func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, historyMode snapshot.HistoryModeType, chain string) {
 	todayItems := snapshotStorage.GetTodaySnapshotsItems(ctx)
 
 	alreadyExist := lo.SomeBy(todayItems, func(item snapshot.SnapshotItem) bool {
-		return item.ChainName == chain && item.SnapshotType == snapshotType
+		return item.ChainName == chain && item.HistoryMode == historyMode
 	})
 
 	if alreadyExist {
@@ -77,8 +77,8 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, snapsho
 		return
 	}
 
-	createSnapshot(snapshotType)
-	snapshotfilename, err := getSnapshotNames(snapshotType)
+	createSnapshot(historyMode)
+	snapshotfilename, err := getSnapshotNames(historyMode)
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}

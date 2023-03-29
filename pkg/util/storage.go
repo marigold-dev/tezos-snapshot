@@ -103,20 +103,18 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 
 		item := snapshot.SnapshotItem{
 			Filename:       filename,
-			NetworkType:    filenameInfo.NetworkType,
 			Filesize:       FileSize(size),
 			FilesizeBytes:  size,
 			ChainName:      filenameInfo.ChainName,
 			Date:           date,
 			BlockTimestamp: timestamp,
-			SnapshotType:   filenameInfo.SnapshotType,
 			URL:            obj.MediaLink,
 			BlockHash:      filenameInfo.BlockHash,
 			BlockHeight:    filenameInfo.BlockHeight,
 			SHA256:         checksum,
 			TezosVersion:   version,
-			ArtifactType:   "tezos-snapshot",
-			HistoryMode:    strings.ToLower(string(filenameInfo.SnapshotType)),
+			ArtifactType:   snapshot.SNAPSHOT,
+			HistoryMode:    filenameInfo.HistoryMode,
 		}
 
 		items = append(items, item)
@@ -266,7 +264,7 @@ func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time
 			fmt.Printf("File YearMonth %d", file.YearMonth())
 			filesYearMonth := filesByYearMonthLookUp[file.YearMonth()]
 			filesYearMonthSameProtocolAndType := lo.Filter(filesYearMonth, func(f File, _ int) bool {
-				return file.NetworkProtocol() == f.NetworkProtocol() && file.SnapshotType() == f.SnapshotType()
+				return file.NetworkProtocol() == f.NetworkProtocol() && file.HistoryMode() == f.HistoryMode()
 			})
 
 			fmt.Printf("here2: %v", filesYearMonthSameProtocolAndType)
@@ -284,7 +282,7 @@ func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time
 		// Files where is not the first protocols file
 		filesProtocolPriority := filesByProtocolPriorityLookUp[file.NetworkProtocol()]
 		filesProtocolPrioritySameProtocolAndType := lo.Filter(filesProtocolPriority, func(f File, _ int) bool {
-			return file.NetworkProtocol() == f.NetworkProtocol() && file.SnapshotType() == f.SnapshotType()
+			return file.NetworkProtocol() == f.NetworkProtocol() && file.HistoryMode() == f.HistoryMode()
 		})
 		firstFileWithThisProtocol := lo.MaxBy(filesProtocolPrioritySameProtocolAndType, func(item File, max File) bool {
 			return item.Date().After(max.Date())
@@ -319,16 +317,12 @@ func cloudObjIsFile(obj *storage.ObjectAttrs) (bool, string, string) {
 }
 
 func getInfoFromfilename(filename string) *FileInfo {
-	chainName := strings.Split(strings.Split(filename, "-")[0], "_")[1]
+	chainName := strings.ToLower(strings.Split(strings.Split(filename, "-")[0], "_")[1])
 
-	networkType := snapshot.NetworkType(snapshot.TESTNET)
-	if strings.Contains(filename, "MAINNET") {
-		networkType = snapshot.NetworkType(snapshot.MAINNET)
-	}
-	snapshotType := snapshot.SnapshotType(snapshot.FULL)
+	historyMode := snapshot.HistoryModeType(snapshot.FULL)
 
 	if strings.Contains(filename, "rolling") {
-		snapshotType = snapshot.SnapshotType(snapshot.ROLLING)
+		historyMode = snapshot.HistoryModeType(snapshot.ROLLING)
 	}
 
 	splitedByHyphen := strings.Split(filename, "-")
@@ -339,20 +333,18 @@ func getInfoFromfilename(filename string) *FileInfo {
 	blockhash := splitedByHyphen[len(splitedByHyphen)-2]
 
 	return &FileInfo{
-		Filename:     filename,
-		NetworkType:  networkType,
-		ChainName:    chainName,
-		SnapshotType: snapshotType,
-		BlockHeight:  blockheight,
-		BlockHash:    blockhash,
+		Filename:    filename,
+		ChainName:   chainName,
+		HistoryMode: historyMode,
+		BlockHeight: blockheight,
+		BlockHash:   blockhash,
 	}
 }
 
 type FileInfo struct {
-	Filename     string
-	ChainName    string
-	NetworkType  snapshot.NetworkType
-	SnapshotType snapshot.SnapshotType
-	BlockHeight  int
-	BlockHash    string
+	Filename    string
+	ChainName   string
+	HistoryMode snapshot.HistoryModeType
+	BlockHeight int
+	BlockHash   string
 }

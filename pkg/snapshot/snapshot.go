@@ -15,21 +15,19 @@ type BlockHeaderResponse struct {
 }
 
 type SnapshotItem struct {
-	Filename       string       `json:"filename"`
-	ChainName      string       `json:"chain_name"`
-	BlockTimestamp string       `json:"block_timestamp"`
-	BlockHash      string       `json:"block_hash"`
-	BlockHeight    int          `json:"block_height"`
-	URL            string       `json:"url"`
-	Filesize       string       `json:"filesize"`
-	SHA256         string       `json:"sha256"`
-	ArtifactType   string       `json:"artifact_type"`
-	HistoryMode    string       `json:"history_mode"`
-	FilesizeBytes  int64        `json:"filesize_bytes"`
-	Date           time.Time    `json:"date"`
-	NetworkType    NetworkType  `json:"network_type"`
-	SnapshotType   SnapshotType `json:"snapshot_type"`
-	TezosVersion   TezosVersion `json:"tezos_version"`
+	Filename       string          `json:"filename"`
+	ChainName      string          `json:"chain_name"`
+	BlockTimestamp string          `json:"block_timestamp"`
+	BlockHash      string          `json:"block_hash"`
+	BlockHeight    int             `json:"block_height"`
+	URL            string          `json:"url"`
+	Filesize       string          `json:"filesize"`
+	SHA256         string          `json:"sha256"`
+	ArtifactType   ArtifactType    `json:"artifact_type"`
+	HistoryMode    HistoryModeType `json:"history_mode"`
+	FilesizeBytes  int64           `json:"filesize_bytes"`
+	Date           time.Time       `json:"date"`
+	TezosVersion   TezosVersion    `json:"tezos_version"`
 }
 
 type TezosVersion struct {
@@ -49,27 +47,37 @@ type CommitInfo struct {
 	CommitDate string `json:"commit_date"`
 }
 
-type SnapshotType string
-type NetworkType string
+type ArtifactType string
+type HistoryModeType string
 
 const (
-	ROLLING SnapshotType = "ROLLING"
-	FULL    SnapshotType = "FULL"
+	SNAPSHOT ArtifactType = "tezos-snapshot"
+	TARBALL  ArtifactType = "tarball"
 )
 const (
-	MAINNET NetworkType = "MAINNET"
-	TESTNET NetworkType = "TESTNET"
+	ROLLING HistoryModeType = "rolling"
+	FULL    HistoryModeType = "full"
+	ARCHIVE HistoryModeType = "archive"
 )
 
+// NetworkProtocolPriority it's a way to sort like that:
+// 1. Mainnet
+// 2. Limannet,
+// 3. Mumbainet
+// 4. Etc..
+// 5. Ithacanet/Ghostnet
 func NetworkProtocolPriority(chain string) int {
-	if chain == "ITHACA" {
+	// Ithacanet/Ghostnet, then will be the last on the list
+	if chain == "ithaca" {
 		return 0
 	}
 
-	if chain == "MAIN" {
+	// Mainnet then will be the first on the list
+	if chain == "main" {
 		return math.MaxInt
 	}
 
+	// Others protocol by protocol number
 	network := chain
 	network_char := network[0]
 	return int(network_char)
