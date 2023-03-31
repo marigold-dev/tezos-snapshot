@@ -79,7 +79,7 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, history
 	})
 
 	if alreadyExist {
-		log.Printf("Already exist a today snapshot with %s type. \n", chain)
+		log.Printf("Already exist a today snapshot with chain: %s and history mode: %s. \n", chain, string(historyMode))
 		return
 	}
 
