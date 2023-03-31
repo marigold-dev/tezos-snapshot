@@ -22,6 +22,7 @@ func main() {
 
 	task()
 
+	log.Println("Waiting for the snapshot job...")
 	s := gocron.NewScheduler(time.UTC)
 	s.Cron(cron).Do(task)
 	s.StartBlocking()
