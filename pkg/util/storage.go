@@ -206,8 +206,14 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 
 	filenameInfo := getInfoFromfilename(file.Name())
 
+	network := strings.ToLower(filenameInfo.ChainName)
+
+	if filenameInfo.ChainName == "ithacanet" {
+		network = "ghostnet"
+	}
+
 	// Request node version
-	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", strings.ToLower(filenameInfo.ChainName)))
+	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", network))
 	if err != nil {
 		log.Fatalf("Unable to get node version. %v \n", err)
 	}
@@ -218,7 +224,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 
 	// Request node to get the block header
-	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/chains/main/blocks/%s/header", strings.ToLower(filenameInfo.ChainName), filenameInfo.BlockHash))
+	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/chains/main/blocks/%s/header", network, filenameInfo.BlockHash))
 	if err != nil {
 		log.Fatalf("Unable to get block header. %v \n", err)
 	}
@@ -318,6 +324,10 @@ func cloudObjIsFile(obj *storage.ObjectAttrs) (bool, string, string) {
 
 func getInfoFromfilename(filename string) *FileInfo {
 	chainName := strings.ToLower(strings.Split(strings.Split(filename, "-")[0], "_")[1])
+
+	if chainName == "ithacanet" {
+		chainName = "ghostnet"
+	}
 
 	historyMode := snapshot.HistoryModeType(snapshot.FULL)
 

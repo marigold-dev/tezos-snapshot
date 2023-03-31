@@ -17,11 +17,9 @@ import (
 
 func main() {
 	godotenv.Load()
+	task()
 
-	cron := os.Getenv("CRON_EXPRESSION")
-	if cron == "" {
-		task()
-	} else {
+	if os.Getenv("CRON_EXPRESSION") != "" {
 		log.Println("Waiting for the snapshot job...")
 		s := gocron.NewScheduler(time.UTC)
 		s.Cron("0 0 * * *").Do(task)
@@ -36,7 +34,7 @@ func task() {
 	bucketName := os.Getenv("BUCKET_NAME")
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
 	maxMonths := util.GetEnvInt("MAX_MONTHS", 6)
-	network := strings.ToUpper(os.Getenv("NETWORK"))
+	network := strings.ToLower(os.Getenv("NETWORK"))
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
