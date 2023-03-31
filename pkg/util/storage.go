@@ -206,14 +206,11 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 
 	filenameInfo := getInfoFromfilename(file.Name())
 
-	network := strings.ToLower(filenameInfo.ChainName)
-
-	if filenameInfo.ChainName == "ithacanet" {
-		network = "ghostnet"
-	}
+	// Wait nodes to be ready
+	checkNodesAreReady()
 
 	// Request node version
-	reqVersion, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/version", network))
+	reqVersion, err := http.Get(fmt.Sprintf("http://localhost:8732/version"))
 	if err != nil {
 		log.Fatalf("Unable to get node version. %v \n", err)
 	}
@@ -224,7 +221,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 
 	// Request node to get the block header
-	reqHeader, err := http.Get(fmt.Sprintf("https://%s.tezos.marigold.dev/chains/main/blocks/%s/header", network, filenameInfo.BlockHash))
+	reqHeader, err := http.Get(fmt.Sprintf("http://localhost:8732/main/blocks/%s/header", filenameInfo.BlockHash))
 	if err != nil {
 		log.Fatalf("Unable to get block header. %v \n", err)
 	}
@@ -357,4 +354,18 @@ type FileInfo struct {
 	HistoryMode snapshot.HistoryModeType
 	BlockHeight int
 	BlockHash   string
+}
+
+func checkNodesAreReady() {
+	for {
+		r, err := http.Get("http://localhost:8732/version")
+		if err != nil && r.StatusCode != 200 {
+			log.Println("The node is not running. Waiting 5 minutes...")
+			time.Sleep(5 * time.Minute)
+		}
+		defer r.Body.Close()
+		if r.StatusCode == 200 {
+			break
+		}
+	}
 }

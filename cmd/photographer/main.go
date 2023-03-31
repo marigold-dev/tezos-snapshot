@@ -17,6 +17,7 @@ import (
 
 func main() {
 	godotenv.Load()
+
 	task()
 
 	if os.Getenv("CRON_EXPRESSION") != "" {
