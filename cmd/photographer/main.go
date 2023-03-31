@@ -45,6 +45,11 @@ func task() {
 		log.Fatalln("The NETWORK environment variable is empty.")
 	}
 
+	// Usually for ghostnet, because it's link
+	if strings.Contains(network, "https://teztnets.xyz/") {
+		network = strings.Replace(network, "https://teztnets.xyz/", "", -1)
+	}
+
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
