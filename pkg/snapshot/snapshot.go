@@ -62,19 +62,19 @@ const (
 
 // NetworkProtocolPriority it's a way to sort like that:
 // 1. Mainnet
-// 2. Limannet,
-// 3. Mumbainet
-// 4. Etc..
-// 5. Ithacanet/Ghostnet
+// 2. Ithacanet/Ghostnet
+// 3. Others...
+// 4. Limannet,
+// 5. Mumbainet
 func NetworkProtocolPriority(chain string) int {
-	// Ithacanet/Ghostnet, then will be the last on the list
-	if chain == "ithaca" {
-		return 0
+	// Mainnet then will be the first on the list
+	if chain == "mainnet" {
+		return math.MaxInt
 	}
 
-	// Mainnet then will be the first on the list
-	if chain == "main" {
-		return math.MaxInt
+	// Ithacanet/Ghostnet, then will be the last on the list
+	if chain == "ithacanet" || chain == "ghostnet" {
+		return math.MaxInt - 1
 	}
 
 	// Others protocol by protocol number
