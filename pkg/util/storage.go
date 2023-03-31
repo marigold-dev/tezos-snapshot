@@ -221,7 +221,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 
 	// Request node to get the block header
-	reqHeader, err := http.Get(fmt.Sprintf("http://localhost:8732/main/blocks/%s/header", filenameInfo.BlockHash))
+	reqHeader, err := http.Get(fmt.Sprintf("http://localhost:8732/chains/main/blocks/%s/header", filenameInfo.BlockHash))
 	if err != nil {
 		log.Fatalf("Unable to get block header. %v \n", err)
 	}
