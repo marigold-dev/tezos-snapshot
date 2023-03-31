@@ -15,7 +15,7 @@ import (
 func createSnapshot(historyMode snapshot.HistoryModeType) {
 	bin := "/usr/local/bin/octez-node"
 
-	args := []string{"snapshot", "export", "--block", "head~30", "--on-disk", "--data-dir", "/var/run/tezos/node/data"}
+	args := []string{"snapshot", "export", "--block", "head~30", "--data-dir", "/var/run/tezos/node/data"}
 
 	if historyMode == snapshot.ROLLING {
 		args = append(args, "--rolling")
