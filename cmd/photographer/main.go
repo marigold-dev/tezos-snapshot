@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -17,15 +18,13 @@ import (
 
 func main() {
 	godotenv.Load()
+	cron := util.GetEnvString("CRON_EXPRESSION", "0 0 * * *")
 
 	task()
 
-	if os.Getenv("CRON_EXPRESSION") != "" {
-		log.Println("Waiting for the snapshot job...")
-		s := gocron.NewScheduler(time.UTC)
-		s.Cron("0 0 * * *").Do(task)
-		s.StartBlocking()
-	}
+	s := gocron.NewScheduler(time.UTC)
+	s.Cron(cron).Do(task)
+	s.StartBlocking()
 }
 
 func task() {
@@ -67,6 +66,9 @@ func task() {
 	snapshotStorage.DeleteExpiredSnapshots(ctx, maxDays, maxMonths)
 
 	log.Printf("Snapshot job took %s", time.Since(start))
+
+	// Reset GC
+	debug.FreeOSMemory()
 }
 
 func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, historyMode snapshot.HistoryModeType, chain string) {

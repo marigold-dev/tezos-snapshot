@@ -6,6 +6,15 @@ import (
 	"strings"
 )
 
+func GetEnvString(key string, defaultValue string) string {
+	stringValue := os.Getenv(key)
+	if stringValue == "" {
+		return defaultValue
+	}
+	return stringValue
+}
+
+
 func GetEnvInt(key string, defaultValue int) int {
 	stringValue := os.Getenv(key)
 	if stringValue == "" {
