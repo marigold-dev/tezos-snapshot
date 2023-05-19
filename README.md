@@ -2,7 +2,7 @@
 
 Services to create and provide Tezos nodes snapshots
 
-We have two entry points for two services, the Photographer CronJob and the Retriever web server.
+We have two entry points for two services, the Photographer CronJob and the Web Server.
 ## Photographer Entrypoint
 
 Service to create Tezos nodes snapshots and upload them into Google Cloud Storage.
@@ -33,9 +33,9 @@ docker build -f photographer.Dockerfile . -t photographer
 docker run photographer
 ```
 
-## Retriever Entrypoint
+## Server Entrypoint
 
-Service to retriever Tezos nodes snapshots from Google Cloud and expose them.
+Service to server Tezos nodes snapshots from Google Cloud and expose them.
 
 We from marigold use it as a Web Service.
 
@@ -52,14 +52,14 @@ export GOOGLE_APPLICATION_CREDENTIALS = "/path/to/your/client_secret.json"
 Running locally:
 
 ```bash
-go run ./cmd/retriever
+go run ./cmd/server
 ```
 
 Running with docker:
 
 ```bash
-docker build -f retriever.Dockerfile . -t retriever
-docker run retriever
+docker build -f server.Dockerfile . -t server
+docker run server
 ```
 
 ## Endpoints

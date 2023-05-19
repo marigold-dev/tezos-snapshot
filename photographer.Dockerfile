@@ -1,3 +1,4 @@
+ARG VERSION=latest
 FROM golang:1.20 as builder
 
 WORKDIR /app
@@ -8,7 +9,7 @@ COPY ./cmd ./cmd
 COPY ./pkg ./pkg
 RUN cd cmd/photographer && go build -o /main
 
-FROM tezos/tezos:v16.1 as tezos
+FROM tezos/tezos:${VERSION} as tezos
 
 FROM debian:buster-slim
 COPY --from=builder /main ./

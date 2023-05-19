@@ -1,16 +1,25 @@
-name: Create Backend Docker Images
+name: Deploy Photographer Docker Image
 
 on:
-  push:
-    branches:
-      - "main"
-    paths-ignore:
-      - 'frontend/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        default: 'release'
+        description: 'Tezos image version or tag'
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - if: github.event_name == 'workflow_dispatch'
+        run: |
+            VERSION=${{ github.event.inputs.version }}
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "Pipeline has been triggered manually. Setting version variable to $VERSION"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -33,24 +42,12 @@ jobs:
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ env.VERSION }}
           # Only push if on main branch
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: |
             ghcr.io/marigold-dev/photographer:latest
+            ghcr.io/marigold-dev/photographer:${{ env.VERSION }}
             ghcr.io/marigold-dev/photographer:${{ github.sha }}
-
-      - name: Build and push
-        id: docker_build_retriever
-        uses: docker/build-push-action@v3
-        with:
-          file: retriever.Dockerfile
-          context: .
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          # Only push if on main branch
-          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          tags: |
-            ghcr.io/marigold-dev/retriever:latest
-            ghcr.io/marigold-dev/retriever:${{ github.sha }}
 

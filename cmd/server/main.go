@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
@@ -14,11 +13,10 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	// godotenv.Load("../../.env")
 
-	goCache := cache.New(1*time.Hour, 1*time.Hour)
+	goCache := cache.New(5*time.Minute, 10*time.Minute)
 	bucketName := os.Getenv("BUCKET_NAME")
-	println(bucketName)
 	timeout := time.Duration(5) * time.Second
 	transport := &http.Transport{
 		ResponseHeaderTimeout: timeout,

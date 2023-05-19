@@ -1,10 +1,10 @@
-name: Deploy Frontend Docker Image
+name: Deploy Server Docker Image
 
 on:
   push:
     branches:
       - "main"
-    paths:
+    paths-ignore:
       - 'frontend/**'
 
 jobs:
@@ -21,19 +21,21 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        id: docker_build_tezos-snapshot-web
+        id: docker_build_server
         uses: docker/build-push-action@v3
         with:
-          context: ./frontend/
+          file: server.Dockerfile
+          context: .
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # Only push if on main branch
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: |
-            ghcr.io/marigold-dev/tezos-snapshot-web:latest
-            ghcr.io/marigold-dev/tezos-snapshot-web:${{ github.sha }}
+            ghcr.io/marigold-dev/server:latest
+            ghcr.io/marigold-dev/server:${{ github.sha }}
+

@@ -5,7 +5,7 @@ COPY go.sum ./
 RUN go mod download
 COPY ./cmd ./cmd
 COPY ./pkg ./pkg
-RUN cd cmd/retriever && go build -o /main
+RUN cd cmd/server && go build -o /main
 
 FROM debian:buster-slim
 COPY --from=builder /main ./
