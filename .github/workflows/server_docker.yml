@@ -25,7 +25,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        id: docker_build_server
+        id: docker_build_tezos_snapshot_server
         uses: docker/build-push-action@v3
         with:
           file: server.Dockerfile
@@ -36,6 +36,6 @@ jobs:
           # Only push if on main branch
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: |
-            ghcr.io/marigold-dev/server:latest
-            ghcr.io/marigold-dev/server:${{ github.sha }}
+            ghcr.io/marigold-dev/tezos-snapshot-server:latest
+            ghcr.io/marigold-dev/tezos-snapshot-server:${{ github.sha }}
 
