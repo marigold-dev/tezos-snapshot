@@ -45,7 +45,7 @@ jobs:
           build-args: |
             VERSION=${{ env.VERSION }}
           # Only push if on main branch
-          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
             ghcr.io/marigold-dev/photographer:latest
             ghcr.io/marigold-dev/photographer:${{ env.VERSION }}
