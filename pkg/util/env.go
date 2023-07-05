@@ -14,7 +14,6 @@ func GetEnvString(key string, defaultValue string) string {
 	return stringValue
 }
 
-
 func GetEnvInt(key string, defaultValue int) int {
 	stringValue := os.Getenv(key)
 	if stringValue == "" {

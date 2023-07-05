@@ -64,6 +64,7 @@ func main() {
 	e.GET("/kathmandunet/:type", downloadableHandlerBuilder("kathmandunet"))
 	e.GET("/limanet/:type", downloadableHandlerBuilder("limanet"))
 	e.GET("/mumbainet/:type", downloadableHandlerBuilder("mumbainet"))
+	e.GET("/nairobinet/:type", downloadableHandlerBuilder("nairobinet"))
 	e.GET("/", api)
 	e.GET("/tezos-snapshots.json", api)
 	e.GET("/health", func(c echo.Context) error {
