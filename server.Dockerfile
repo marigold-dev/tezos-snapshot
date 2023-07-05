@@ -5,7 +5,9 @@ COPY go.sum ./
 RUN go mod download
 COPY ./cmd ./cmd
 COPY ./pkg ./pkg
-RUN cd cmd/server && go build -o /main
+# To use the libc functions for net and os/user, and still get a static binary (for containers)
+# https://github.com/remotemobprogramming/mob/issues/393
+RUN cd cmd/server && go build -ldflags "-linkmode 'external' -extldflags '-static'" -o /main
 
 FROM debian:buster-slim
 COPY --from=builder /main ./

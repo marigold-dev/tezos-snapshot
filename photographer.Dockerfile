@@ -7,7 +7,9 @@ COPY go.sum ./
 RUN go mod download
 COPY ./cmd ./cmd
 COPY ./pkg ./pkg
-RUN cd cmd/photographer && go build -o /main
+# To use the libc functions for net and os/user, and still get a static binary (for containers)
+# https://github.com/remotemobprogramming/mob/issues/393
+RUN cd cmd/photographer && go build -ldflags "-linkmode 'external' -extldflags '-static'" -o /main
 
 FROM tezos/tezos:${VERSION} as tezos
 
