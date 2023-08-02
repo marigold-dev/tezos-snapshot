@@ -4,6 +4,9 @@ import { useTheme, ThemeProvider } from '@mui/material/styles'
 import { Snapshot } from './models/Snapshot'
 import HeaderBar from './components/HeaderBar'
 import Content from './components/Content'
+import ReactGA from "react-ga4";
+
+ReactGA.initialize("G-63BFNDZ30Q");
 
 export function App() {
   const theme = useTheme()
