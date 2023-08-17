@@ -61,6 +61,9 @@ func task() {
 	// Check if today the rolling snapshot already exists
 	execute(ctx, snapshotStorage, snapshot.ROLLING, network)
 
+	// Reset GC
+	debug.FreeOSMemory()
+
 	// Check if today the full snapshot already exists
 	execute(ctx, snapshotStorage, snapshot.FULL, network)
 
