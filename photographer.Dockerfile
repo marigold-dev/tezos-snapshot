@@ -21,5 +21,9 @@ COPY --from=tezos /usr/local/bin/octez-client /usr/local/bin/octez-client
 COPY --from=tezos /usr/local/bin/octez-node /usr/local/bin/octez-node
 COPY --from=tezos etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
+RUN addgroup -S tezos && adduser -S tezos -G tezos
+USER tezos
+ENV USER=tezos
+
 ENTRYPOINT ["./main"]
 CMD [""]
