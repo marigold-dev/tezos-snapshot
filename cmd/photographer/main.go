@@ -92,6 +92,5 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, history
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
-	snapshotFullPath := "/var/run/tezos/snapshots/" + snapshotfilename
-	snapshotStorage.EphemeralUpload(ctx, snapshotFullPath)
+	snapshotStorage.EphemeralUpload(ctx, snapshotfilename)
 }
