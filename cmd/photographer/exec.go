@@ -11,15 +11,13 @@ import (
 )
 
 func createSnapshot(historyMode snapshot.HistoryModeType) {
-	bin := "/usr/local/bin/octez-node"
-
-	args := []string{"sh", "-c", "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && snapshot export --block head~30 --data-dir /var/run/tezos/node/data"}
+	script := "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && /usr/local/bin/octez-node snapshot export --block head~30 --data-dir /var/run/tezos/node/data"
 
 	if historyMode == snapshot.ROLLING {
-		args = append(args, "--rolling")
+		script = script + " --rolling"
 	}
 
-	cmd := exec.Command(bin, args...)
+	cmd := exec.Command("sh", "-c", script)
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
 	err := cmd.Run()
