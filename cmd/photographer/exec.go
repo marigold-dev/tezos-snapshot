@@ -26,10 +26,8 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 		log.Fatalf("%v \n", err)
 	}
 
-	log.Println("snapshot export stdout:")
-	log.Println(stdout.String())
-	log.Println("snapshot export stderr:")
-	log.Println(stderr.String())
+	log.Printf("snapshot export stdout: \n%s\n", stdout.String())
+	log.Printf("snapshot export stderr: \n%s\n", stderr.String())
 }
 
 func getSnapshotNames(historyMode snapshot.HistoryModeType) (string, error) {
