@@ -6,6 +6,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"syscall"
 
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 )
@@ -18,8 +19,11 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 	}
 
 	cmd := exec.Command("sh", "-c", script)
-	var stdout bytes.Buffer
+	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
+	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: 1000, Gid: 1000}
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("%v \n", err)
@@ -27,6 +31,8 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 
 	log.Println("snapshot export stdout:")
 	log.Println(stdout.String())
+	log.Println("snapshot export stderr:")
+	log.Println(stderr.String())
 }
 
 func getSnapshotNames(historyMode snapshot.HistoryModeType) (string, error) {
