@@ -6,7 +6,6 @@ import (
 	"log"
 	"os/exec"
 	"strings"
-	"syscall"
 
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 )
@@ -22,8 +21,6 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
-	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: 1000, Gid: 1000}
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("%v \n", err)
