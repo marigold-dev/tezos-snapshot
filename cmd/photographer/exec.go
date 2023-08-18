@@ -3,9 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"log"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -22,20 +20,22 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 	}
 
 	cmd := exec.Command(bin, args...)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	if err := cmd.Run(); err != nil {
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+	err := cmd.Start()
+	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
+
+	log.Println("snapshot export stdout:")
+	log.Println(stdout.String())
 }
 
 func getSnapshotNames(historyMode snapshot.HistoryModeType) (string, error) {
 	log.Println("Getting snapshot names.")
-	var errBuf, outBuf bytes.Buffer
+	var outBuf bytes.Buffer
 	cmd := exec.Command("/bin/ls", "-1a")
-	cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
-	cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
+	cmd.Stdout = &outBuf
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("%v \n", err)
