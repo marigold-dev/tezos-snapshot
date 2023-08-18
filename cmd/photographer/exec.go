@@ -13,7 +13,7 @@ import (
 func createSnapshot(historyMode snapshot.HistoryModeType) {
 	bin := "/usr/local/bin/octez-node"
 
-	args := []string{"snapshot", "export", "--block", "head~30", "--data-dir", "/var/run/tezos/node/data"}
+	args := []string{"sh", "-c", "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && snapshot export --block head~30 --data-dir /var/run/tezos/node/data"}
 
 	if historyMode == snapshot.ROLLING {
 		args = append(args, "--rolling")
@@ -33,14 +33,14 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 
 func getSnapshotNames(historyMode snapshot.HistoryModeType) (string, error) {
 	log.Println("Getting snapshot names.")
-	var outBuf bytes.Buffer
-	cmd := exec.Command("/bin/ls", "-1a")
-	cmd.Stdout = &outBuf
+	var stdout bytes.Buffer
+	cmd := exec.Command("sh", "-c", "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && /bin/ls -1a")
+	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
-	snapshotfilenames := strings.Split(outBuf.String(), "\n")
+	snapshotfilenames := strings.Split(stdout.String(), "\n")
 	log.Printf("All files found: %v \n", snapshotfilenames)
 
 	extension := "full"
