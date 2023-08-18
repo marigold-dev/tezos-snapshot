@@ -20,5 +20,9 @@ COPY --from=tezos /lib/ /lib/
 COPY --from=tezos /usr/local/bin/octez-client /usr/local/bin/octez-client
 COPY --from=tezos /usr/local/bin/octez-node /usr/local/bin/octez-node
 COPY --from=tezos etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
+USER tezos
+ENV USER=tezos
+
 ENTRYPOINT ["./main"]
 CMD [""]
