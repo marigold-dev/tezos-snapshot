@@ -22,7 +22,7 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 	cmd := exec.Command(bin, args...)
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
-	err := cmd.Start()
+	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
