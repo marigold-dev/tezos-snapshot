@@ -6,7 +6,6 @@ on:
       - "main"
     paths:
       - 'frontend/**'
-  workflow_dispatch:
 
 jobs:
   docker:
@@ -40,7 +39,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # Only push if on main branch
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: |
             ghcr.io/marigold-dev/tezos-snapshot-web:latest
             ghcr.io/marigold-dev/tezos-snapshot-web:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
