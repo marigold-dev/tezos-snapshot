@@ -63,20 +63,20 @@ export default function HeaderBar () {
             API
           </SnapshotLink>
           <Separator></Separator>
-          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/testnet/full">
-            FULL TESTNET
-          </SnapshotLink>
-          <Separator></Separator>
-          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/testnet">
-            ROLLING TESTNET
-          </SnapshotLink>
-          <Separator></Separator>
           <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/mainnet/full">
             FULL MAINNET
           </SnapshotLink>
           <Separator></Separator>
-          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/mainnet">
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/mainnet/rolling">
             ROLLING MAINNET
+          </SnapshotLink>
+          <Separator></Separator>
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/ghostnet/full">
+            FULL GHOST
+          </SnapshotLink>
+          <Separator></Separator>
+          <SnapshotLink url="https://snapshots.tezos.marigold.dev/api/ghostnet/rolling">
+            ROLLING GHOST
           </SnapshotLink>
           <Separator></Separator>
         </span>}
