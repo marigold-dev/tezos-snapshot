@@ -42,7 +42,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # Only push if on main branch
-          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+          push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
             ghcr.io/marigold-dev/tezos-snapshot-server:latest
             ghcr.io/marigold-dev/tezos-snapshot-server:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
