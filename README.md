@@ -65,7 +65,7 @@ docker run server
 ## Endpoints
 
 * **/** to return json content with all snapshots
-* **/mainnet** to return the last mainnet rolling snapshot
+* **/mainnet/rolling** to return the last mainnet rolling snapshot
 * **/mainnet/full** to return the last mainnet full snapshot
-* **/testnet** to return the last testnet rolling snapshot
-* **/testnet/full** to return the last testnet full snapshot
+* **/ghostnet/rolling** to return the last testnet rolling snapshot
+* **/ghostnet/full** to return the last testnet full snapshot
