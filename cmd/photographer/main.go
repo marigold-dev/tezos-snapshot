@@ -86,9 +86,4 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, history
 		log.Fatalf("%v \n", err)
 	}
 	snapshotStorage.EphemeralUpload(ctx, snapshotfilename)
-
-	// If we are here, it means that the snapshot was uploaded successfully
-	// So we already deleted the snapshot
-	// Then we can exit to have sure that we're not using more memory than we need
-	os.Exit(0)
 }
