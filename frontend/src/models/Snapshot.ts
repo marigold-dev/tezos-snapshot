@@ -12,5 +12,18 @@ export type Snapshot = {
   sha256: string
   block_height: number
   url: string
+  filesize: string
   filesize_bytes: number
+  tezos_version: {
+    version: {
+      additional_info: string
+      major: number
+      minor: number
+    }
+    implementation: string
+    commit_info: {
+      commit_date: string
+      commit_hash: string
+    }
+  }
 }

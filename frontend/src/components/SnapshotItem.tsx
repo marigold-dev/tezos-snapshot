@@ -84,6 +84,28 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
         >
           {props.snapshot.sha256}
         </Typography>
+        <Typography
+          style={{
+            fontWeight: 'bold',
+            fontSize: 'x-small',
+            overflowWrap: 'break-word',
+            color: 'rgb(235, 52, 72)',
+          }}
+          component="div"
+        >
+          Tezos Version
+        </Typography>
+        <Typography
+          style={{
+            fontWeight: 'bold',
+            fontSize: '13px',
+            overflowWrap: 'break-word',
+          }}
+          component="div"
+        >
+          {props.snapshot.tezos_version.version.major}.
+          {props.snapshot.tezos_version.version.minor}
+        </Typography>
       </CardContent>
 
       <CardActions sx={{ justifyContent: 'right' }}>
