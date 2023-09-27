@@ -103,7 +103,7 @@ const SnapshotItem = (props: { snapshot: Snapshot }) => {
           }}
           component="div"
         >
-          {props.snapshot.tezos_version.version.major}.
+          v{props.snapshot.tezos_version.version.major}.
           {props.snapshot.tezos_version.version.minor}
         </Typography>
       </CardContent>
