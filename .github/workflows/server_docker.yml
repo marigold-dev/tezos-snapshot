@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - "main"
-    paths:
-      - 'cmd/server/**'
-      - 'cmd/schema/**'
+    paths-ignore:
+      - 'frontend/**'
 
 jobs:
   docker:
