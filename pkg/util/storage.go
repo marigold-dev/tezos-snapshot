@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -226,7 +225,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 		log.Fatalf("Unable to get node version. %v \n", err)
 	}
 	defer reqVersion.Body.Close()
-	version, err := ioutil.ReadAll(reqVersion.Body)
+	version, err := io.ReadAll(reqVersion.Body)
 	if err != nil {
 		log.Fatalf("Unable to read node version. %v \n", err)
 	}

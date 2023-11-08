@@ -37,9 +37,10 @@ type TezosVersion struct {
 }
 
 type Version struct {
-	Major          int    `json:"major"`
-	Minor          int    `json:"minor"`
-	AdditionalInfo string `json:"additional_info"`
+	Major int `json:"major"`
+	Minor int `json:"minor"`
+	// This could be map[string]int or string
+	AdditionalInfo interface{} `json:"additional_info"`
 }
 
 type CommitInfo struct {
