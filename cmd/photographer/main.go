@@ -11,6 +11,7 @@ import (
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
+	"github.com/marigold-dev/tezos-snapshot/pkg/store"
 	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 	"github.com/samber/lo"
 )
@@ -55,7 +56,7 @@ func task() {
 	}
 	defer client.Close()
 
-	snapshotStorage := util.NewSnapshotStorage(client, bucketName)
+	snapshotStorage := store.NewSnapshotStorage(client, bucketName)
 
 	// Check if today the rolling snapshot already exists
 	execute(ctx, snapshotStorage, snapshot.ROLLING, network)
@@ -68,7 +69,7 @@ func task() {
 	log.Printf("Snapshot job took %s", time.Since(start))
 }
 
-func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, historyMode snapshot.HistoryModeType, chain string) {
+func execute(ctx context.Context, snapshotStorage *store.SnapshotStorage, historyMode snapshot.HistoryModeType, chain string) {
 	todayItems := snapshotStorage.GetTodaySnapshotsItems(ctx)
 
 	alreadyExist := lo.SomeBy(todayItems, func(item snapshot.SnapshotItem) bool {
@@ -81,9 +82,11 @@ func execute(ctx context.Context, snapshotStorage *util.SnapshotStorage, history
 	}
 
 	createSnapshot(historyMode)
-	snapshotfilename, err := getSnapshotNames(historyMode)
+	snapshotfilename, err := getSnapshotName(historyMode)
+	snapshotHeaderOutput := getSnapshotHeaderOutput(snapshotfilename)
+
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
-	snapshotStorage.EphemeralUpload(ctx, snapshotfilename)
+	snapshotStorage.EphemeralUpload(ctx, snapshotfilename, snapshotHeaderOutput)
 }

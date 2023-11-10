@@ -17,6 +17,34 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 		script = script + " --rolling"
 	}
 
+	_, _ = execScript(script)
+}
+
+func getSnapshotName(historyMode snapshot.HistoryModeType) (string, error) {
+	log.Println("Getting snapshot names.")
+	script := "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && /bin/ls -1a"
+	stdout, _ := execScript(script)
+
+	snapshotfilenames := strings.Split(stdout.String(), "\n")
+	log.Printf("All files found: %v \n", snapshotfilenames)
+
+	for _, filename := range snapshotfilenames {
+		if strings.Contains(filename, string(historyMode)) {
+			log.Printf("Snapshot file found is: %q. \n", filename)
+			return filename, nil
+		}
+	}
+
+	return "", fmt.Errorf("Snapshot file not found.")
+}
+
+func getSnapshotHeaderOutput(filepath string) string {
+	script := "/usr/local/bin/octez-node snapshot info --json" + filepath
+	stdout, _ := execScript(script)
+	return stdout.String()
+}
+
+func execScript(script string) (bytes.Buffer, bytes.Buffer) {
 	cmd := exec.Command("sh", "-c", script)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -25,35 +53,12 @@ func createSnapshot(historyMode snapshot.HistoryModeType) {
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
-
-	log.Printf("snapshot export stdout: \n%s\n", stdout.String())
-	log.Printf("snapshot export stderr: \n%s\n", stderr.String())
-}
-
-func getSnapshotNames(historyMode snapshot.HistoryModeType) (string, error) {
-	log.Println("Getting snapshot names.")
-	var stdout bytes.Buffer
-	cmd := exec.Command("sh", "-c", "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && /bin/ls -1a")
-	cmd.Stdout = &stdout
-	err := cmd.Run()
-	if err != nil {
-		log.Fatalf("%v \n", err)
+	if stdout.Len() > 0 {
+		log.Printf("stdout: \n%s\n", stdout.String())
 	}
-	snapshotfilenames := strings.Split(stdout.String(), "\n")
-	log.Printf("All files found: %v \n", snapshotfilenames)
-
-	extension := "full"
-
-	if historyMode == snapshot.ROLLING {
-		extension = "rolling"
+	if stderr.Len() > 0 {
+		log.Printf("stderr: \n%s\n", stderr.String())
 	}
 
-	for _, filename := range snapshotfilenames {
-		if strings.Contains(filename, extension) {
-			log.Printf("Snapshot file found is: %q. \n", filename)
-			return filename, nil
-		}
-	}
-
-	return "", fmt.Errorf("Snapshot file not found.")
+	return stdout, stderr
 }

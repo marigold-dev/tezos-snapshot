@@ -1,7 +1,6 @@
-package util
+package store
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -56,7 +55,6 @@ func Test_filterFilesToDelete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := filterFilesToDelete(tt.args.maxDays, tt.args.maxMonths,
 				tt.args.files, time.Date(2022, 6, 26, 0, 0, 0, 0, time.UTC))
-			fmt.Printf("%d\n", len(got))
 
 			if len(got) != 6 {
 				t.Errorf("filterFilesToDelete() = %v, want %v", len(got), 6)

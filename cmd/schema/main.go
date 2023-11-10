@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -16,11 +16,11 @@ func main() {
 	}
 
 	if result.Valid() {
-		fmt.Printf("The document is valid\n")
+		log.Printf("The document is valid\n")
 	} else {
-		fmt.Printf("The document is not valid. see errors :\n")
+		log.Printf("The document is not valid. see errors :\n")
 		for _, desc := range result.Errors() {
-			fmt.Printf("- %s\n", desc)
+			log.Printf("- %s\n", desc)
 		}
 	}
 }

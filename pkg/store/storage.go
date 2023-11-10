@@ -1,4 +1,4 @@
-package util
+package store
 
 import (
 	"context"
@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/marigold-dev/tezos-snapshot/pkg/node"
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
+	"github.com/marigold-dev/tezos-snapshot/pkg/util"
 	"github.com/samber/lo"
 	"google.golang.org/api/iterator"
 )
@@ -29,16 +29,16 @@ func NewSnapshotStorage(client *storage.Client, bucketName string) *SnapshotStor
 	return &SnapshotStorage{client: client, bucketName: bucketName}
 }
 
-func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, filename string) {
-    // Save the current working directory so we can revert back
-    currentDir, err := os.Getwd()
-    if err != nil {
-        log.Fatalf("Failed to get current directory: %v", err)
-    }
-    // Change to the desired directory
-    if err := os.Chdir("/var/run/tezos/snapshots/"); err != nil {
-        log.Fatalf("Failed to change directory: %v", err)
-    }
+func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, filename, snapshotHeaderOutput string) {
+	// Save the current working directory so we can revert back
+	currentDir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get current directory: %v", err)
+	}
+	// Change to the desired directory
+	if err := os.Chdir("/var/run/tezos/snapshots/"); err != nil {
+		log.Fatalf("Failed to change directory: %v", err)
+	}
 
 	log.Printf("Opening snapshot file %q.", filename)
 	snapshotFile, err := os.Open(filename)
@@ -48,7 +48,7 @@ func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, filename string) 
 	defer snapshotFile.Close()
 
 	log.Printf("Uploading %q snapshot to Google Clound Storage.", filename)
-	err = s.uploadSnapshot(ctx, snapshotFile)
+	err = s.uploadSnapshot(ctx, snapshotFile, snapshotHeaderOutput)
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
@@ -58,7 +58,7 @@ func (s *SnapshotStorage) EphemeralUpload(ctx context.Context, filename string) 
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.Chdir(currentDir)  // Ensure we change back to the original directory
+	defer os.Chdir(currentDir) // Ensure we change back to the original directory
 }
 
 func (s *SnapshotStorage) GetTodaySnapshotsItems(ctx context.Context) []snapshot.SnapshotItem {
@@ -101,7 +101,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 		filenameInfo := getInfoFromfilename(filename)
 
 		checksum := obj.Metadata["SHA256CHECKSUM"]
-		timestamp := obj.Metadata["TIMESTAMP"]
+		snapshotHeaderJson := obj.Metadata["SNAPSHOT_HEADER"]
 		versionJson, versionExist := obj.Metadata["VERSION"]
 		version := snapshot.TezosVersion{}
 		version.Implementation = "octez"
@@ -111,20 +111,48 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			version.Version.Major = 7
 		}
 
+		var snapshotHeader *snapshot.SnapshotHeader
+		if snapshotHeaderJson == "" {
+			// Handle old snapshots before the snapshot header was added
+			snapshotVersion := 0
+			if version.Version.Major >= 16 && version.Version.Major <= 17 {
+				snapshotVersion = 5
+			}
+			if version.Version.Major == 18 && version.Version.Minor == 0 {
+				snapshotVersion = 6
+			}
+
+			snapshotHeader = &snapshot.SnapshotHeader{
+				Version:   snapshotVersion,
+				ChaiName:  filenameInfo.ChainName,
+				Mode:      string(filenameInfo.HistoryMode),
+				BlockHash: filenameInfo.BlockHash,
+				Level:     filenameInfo.BlockHeight,
+				Timestamp: obj.Metadata["TIMESTAMP"],
+			}
+		} else {
+			var err error
+			snapshotHeader, err = snapshot.SnapshotHeaderFromJson(snapshotHeaderJson)
+			if err != nil {
+				log.Fatalf("Unable to parse snapshot header. %v \n", err)
+			}
+		}
+
 		item := snapshot.SnapshotItem{
-			Filename:       filename,
-			Filesize:       FileSize(size),
-			FilesizeBytes:  size,
-			ChainName:      filenameInfo.ChainName,
-			Date:           date,
-			BlockTimestamp: timestamp,
-			URL:            obj.MediaLink,
-			BlockHash:      filenameInfo.BlockHash,
-			BlockHeight:    filenameInfo.BlockHeight,
-			SHA256:         checksum,
-			TezosVersion:   version,
-			ArtifactType:   snapshot.SNAPSHOT,
-			HistoryMode:    filenameInfo.HistoryMode,
+			Filename:        filename,
+			Filesize:        util.FileSize(size),
+			FilesizeBytes:   size,
+			ChainName:       snapshotHeader.SanitizeChainame(),
+			Date:            date,
+			BlockTimestamp:  snapshotHeader.Timestamp,
+			URL:             obj.MediaLink,
+			BlockHash:       snapshotHeader.BlockHash,
+			BlockHeight:     snapshotHeader.Level,
+			SHA256:          checksum,
+			TezosVersion:    version,
+			ArtifactType:    snapshot.SNAPSHOT,
+			HistoryMode:     snapshot.HistoryModeType(snapshotHeader.Mode),
+			SnapshotVersion: snapshotHeader.Version,
 		}
 
 		items = append(items, item)
@@ -133,9 +161,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 	// Order by date and network
 	sort.Slice(items, func(i, j int) bool {
 		if items[i].Date == items[j].Date {
-			networkIsPriority :=
-				snapshot.NetworkProtocolPriority(items[i].ChainName) >
-					snapshot.NetworkProtocolPriority(items[j].ChainName)
+			networkIsPriority := items[i].NetworkProtocolPriority() > items[j].NetworkProtocolPriority()
 			return networkIsPriority
 		}
 		dateIsGreater := items[i].Date.After(items[j].Date)
@@ -181,7 +207,7 @@ func (s *SnapshotStorage) DeleteExpiredSnapshots(ctx context.Context, maxDays in
 	})
 }
 
-func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) error {
+func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File, snapshotHeaderOutput string) error {
 	hasher := sha256.New()
 	currentTime := time.Now()
 	currentDate := currentTime.Format("2006.01.02")
@@ -214,37 +240,21 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 	}
 	log.Printf("Blob %q is public now.\n", file.Name())
 
-	filenameInfo := getInfoFromfilename(file.Name())
-
 	// Wait nodes to be ready
-	checkNodesAreReady()
+	node.CheckNodesAreReady()
 
 	// Request node version
-	reqVersion, err := http.Get(fmt.Sprintf("http://localhost:8732/version"))
-	if err != nil {
-		log.Fatalf("Unable to get node version. %v \n", err)
-	}
-	defer reqVersion.Body.Close()
-	version, err := io.ReadAll(reqVersion.Body)
-	if err != nil {
-		log.Fatalf("Unable to read node version. %v \n", err)
-	}
+	version := node.GetTezosVersion()
 
-	// Request node to get the block header
-	reqHeader, err := http.Get(fmt.Sprintf("http://localhost:8732/chains/main/blocks/%s/header", filenameInfo.BlockHash))
-	if err != nil {
-		log.Fatalf("Unable to get block header. %v \n", err)
-	}
-	defer reqHeader.Body.Close()
-	blockHeaderResponse := snapshot.BlockHeaderResponse{}
-	json.NewDecoder(reqHeader.Body).Decode(&blockHeaderResponse)
+	// Getting Sha256 checksum
+	sha256Checksum := fmt.Sprintf("%x", hasher.Sum(nil))
 
 	// Add Checksum Metadata
 	objectAttrsToUpdate := storage.ObjectAttrsToUpdate{
 		Metadata: map[string]string{
-			"SHA256CHECKSUM": fmt.Sprintf("%x", hasher.Sum(nil)),
-			"VERSION":        string(version),
-			"TIMESTAMP":      blockHeaderResponse.Timestamp,
+			"SHA256CHECKSUM":  sha256Checksum,
+			"VERSION":         version,
+			"SNAPSHOT_HEADER": snapshotHeaderOutput,
 		},
 	}
 
@@ -257,7 +267,7 @@ func (s *SnapshotStorage) uploadSnapshot(ctx context.Context, file *os.File) err
 }
 
 func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time) []File {
-	fmt.Printf("Current Date is %q.\n", now.Format("2006.01.02"))
+	log.Printf("Current Date is %q.\n", now.Format("2006.01.02"))
 	actualMounth := ((int(now.Month()) * 12) + int(now.Year()))
 
 	filesByYearMonthLookUp := lo.GroupBy(files, func(file File) int {
@@ -274,18 +284,15 @@ func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time
 		// Files where its month it's not more than (maxMonth) months ago and
 		// it's not the first snapshot from its month.
 		if (file.YearMonth() - actualMounth) < maxMonths {
-			fmt.Printf("File YearMonth %d", file.YearMonth())
+			log.Printf("File YearMonth %d", file.YearMonth())
 			filesYearMonth := filesByYearMonthLookUp[file.YearMonth()]
 			filesYearMonthSameProtocolAndType := lo.Filter(filesYearMonth, func(f File, _ int) bool {
 				return file.NetworkProtocol() == f.NetworkProtocol() && file.HistoryMode() == f.HistoryMode()
 			})
 
-			fmt.Printf("here2: %v", filesYearMonthSameProtocolAndType)
 			firstFileWithThisMonth := lo.MinBy(filesYearMonthSameProtocolAndType, func(item File, min File) bool {
 				return item.Date().Before(min.Date())
 			})
-
-			fmt.Printf("here: %v", firstFileWithThisMonth)
 
 			if file == firstFileWithThisMonth {
 				return false
@@ -305,7 +312,6 @@ func filterFilesToDelete(maxDays int, maxMonths int, files []File, now time.Time
 		}
 
 		// Files where is more than (maxDays) days ago
-
 		diffDays := int(now.Sub(file.Date()).Hours() / 24)
 		log.Printf("Date folder diffDays is %d. \n", diffDays)
 
@@ -327,55 +333,4 @@ func cloudObjIsFile(obj *storage.ObjectAttrs) (bool, string, string) {
 	}
 
 	return (len(splitedBySlash) == 2 && (splitedBySlash[1] != "")), splitedBySlash[0], splitedBySlash[1]
-}
-
-func getInfoFromfilename(filename string) *FileInfo {
-	chainName := strings.ToLower(strings.Split(strings.Split(filename, "-")[0], "_")[1])
-
-	if chainName == "ithacanet" {
-		chainName = "ghostnet"
-	}
-
-	historyMode := snapshot.HistoryModeType(snapshot.FULL)
-
-	if strings.Contains(filename, "rolling") {
-		historyMode = snapshot.HistoryModeType(snapshot.ROLLING)
-	}
-
-	splitedByHyphen := strings.Split(filename, "-")
-	blockheight, err := strconv.Atoi(strings.Split(splitedByHyphen[len(splitedByHyphen)-1], ".")[0])
-	if err != nil {
-		log.Fatalf("Unable to parse blockheight. %v \n", err)
-	}
-	blockhash := splitedByHyphen[len(splitedByHyphen)-2]
-
-	return &FileInfo{
-		Filename:    filename,
-		ChainName:   chainName,
-		HistoryMode: historyMode,
-		BlockHeight: blockheight,
-		BlockHash:   blockhash,
-	}
-}
-
-type FileInfo struct {
-	Filename    string
-	ChainName   string
-	HistoryMode snapshot.HistoryModeType
-	BlockHeight int
-	BlockHash   string
-}
-
-func checkNodesAreReady() {
-	for {
-		r, err := http.Get("http://localhost:8732/version")
-		if err != nil && r.StatusCode != 200 {
-			log.Println("The node is not running. Waiting 5 minutes...")
-			time.Sleep(5 * time.Minute)
-		}
-		defer r.Body.Close()
-		if r.StatusCode == 200 {
-			break
-		}
-	}
 }
