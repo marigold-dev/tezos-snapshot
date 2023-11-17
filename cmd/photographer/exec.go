@@ -16,11 +16,12 @@ type SnapshotExec struct {
 	octezNodeBinPath string
 }
 
-func newSnapshotExec(snapshotsPath, tezosPath, octezNodePath string) *SnapshotExec {
+func NewSnapshotExec(snapshotsPath, tezosPath, octezNodePath string) *SnapshotExec {
 	return &SnapshotExec{snapshotsPath, tezosPath, octezNodePath}
 }
 
 func (s *SnapshotExec) CreateSnapshot(historyMode snapshot.HistoryModeType) {
+	log.Println("Creating snapshot.")
 	script := "mkdir -p " + s.snapshotsPath + " && cd " + s.snapshotsPath + " && " + s.octezNodeBinPath + " snapshot export --data-dir " + s.tezosPath
 
 	if historyMode == snapshot.ROLLING {
@@ -63,6 +64,7 @@ func (s *SnapshotExec) DeleteLocalSnapshots() {
 }
 
 func (s *SnapshotExec) execScript(script string) (bytes.Buffer, bytes.Buffer) {
+	log.Printf("Executing script: %q. \n", script)
 	cmd := exec.Command("sh", "-c", script)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

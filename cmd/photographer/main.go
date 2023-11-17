@@ -40,7 +40,7 @@ func task() {
 	octezNodepath := util.GetEnvString("OCTEZ_NODE_PATH", "/usr/local/bin/octez-node")
 	tezosPath := util.GetEnvString("TEZOS_PATH", "/var/run/tezos/node")
 
-	snapshotExec := newSnapshotExec(snapshotsPath, octezNodepath, tezosPath)
+	snapshotExec := NewSnapshotExec(snapshotsPath, octezNodepath, tezosPath)
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
