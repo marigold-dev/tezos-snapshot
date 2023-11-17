@@ -12,12 +12,12 @@ import (
 
 type SnapshotExec struct {
 	snapshotsPath    string
-	tezosPath        string
 	octezNodeBinPath string
+	tezosPath        string
 }
 
-func NewSnapshotExec(snapshotsPath, tezosPath, octezNodePath string) *SnapshotExec {
-	return &SnapshotExec{snapshotsPath, tezosPath, octezNodePath}
+func NewSnapshotExec(snapshotsPath, octezNodePath, tezosPath string) *SnapshotExec {
+	return &SnapshotExec{snapshotsPath, octezNodePath, tezosPath}
 }
 
 func (s *SnapshotExec) CreateSnapshot(historyMode snapshot.HistoryModeType) {
