@@ -36,6 +36,11 @@ func task() {
 	maxDays := util.GetEnvInt("MAX_DAYS", 7)
 	maxMonths := util.GetEnvInt("MAX_MONTHS", 6)
 	network := strings.ToLower(os.Getenv("NETWORK"))
+	snapshotsPath := util.GetEnvString("SNAPSHOTS_PATH", "/var/run/tezos/snapshots")
+	octezNodepath := util.GetEnvString("OCTEZ_NODE_PATH", "/usr/local/bin/octez-node")
+	tezosPath := util.GetEnvString("TEZOS_PATH", "/var/run/tezos/node")
+
+	snapshotExec := newSnapshotExec(snapshotsPath, octezNodepath, tezosPath)
 
 	if bucketName == "" {
 		log.Fatalln("The BUCKET_NAME environment variable is empty.")
@@ -59,17 +64,20 @@ func task() {
 	snapshotStorage := store.NewSnapshotStorage(client, bucketName)
 
 	// Check if today the rolling snapshot already exists
-	execute(ctx, snapshotStorage, snapshot.ROLLING, network)
+	execute(ctx, snapshotStorage, snapshot.ROLLING, network, snapshotExec)
 
 	// Check if today the full snapshot already exists
-	execute(ctx, snapshotStorage, snapshot.FULL, network)
+	execute(ctx, snapshotStorage, snapshot.FULL, network, snapshotExec)
 
 	snapshotStorage.DeleteExpiredSnapshots(ctx, maxDays, maxMonths)
+
+	// Delete local snapshots
+	snapshotExec.DeleteLocalSnapshots()
 
 	log.Printf("Snapshot job took %s", time.Since(start))
 }
 
-func execute(ctx context.Context, snapshotStorage *store.SnapshotStorage, historyMode snapshot.HistoryModeType, chain string) {
+func execute(ctx context.Context, snapshotStorage *store.SnapshotStorage, historyMode snapshot.HistoryModeType, chain string, snapshotExec *SnapshotExec) {
 	todayItems := snapshotStorage.GetTodaySnapshotsItems(ctx)
 
 	alreadyExist := lo.SomeBy(todayItems, func(item snapshot.SnapshotItem) bool {
@@ -81,12 +89,12 @@ func execute(ctx context.Context, snapshotStorage *store.SnapshotStorage, histor
 		return
 	}
 
-	createSnapshot(historyMode)
-	snapshotfilename, err := getSnapshotName(historyMode)
+	snapshotExec.CreateSnapshot(historyMode)
+	snapshotfilename, err := snapshotExec.GetSnapshotName(historyMode)
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
-	snapshotHeaderOutput := getSnapshotHeaderOutput(snapshotfilename)
+	snapshotHeaderOutput := snapshotExec.GetSnapshotHeaderOutput(snapshotfilename)
 
 	snapshotStorage.EphemeralUpload(ctx, snapshotfilename, snapshotHeaderOutput)
 }

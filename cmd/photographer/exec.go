@@ -10,20 +10,30 @@ import (
 	"github.com/marigold-dev/tezos-snapshot/pkg/snapshot"
 )
 
-func createSnapshot(historyMode snapshot.HistoryModeType) {
-	script := "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && /usr/local/bin/octez-node snapshot export --block head~30 --data-dir /var/run/tezos/node/data"
+type SnapshotExec struct {
+	snapshotsPath    string
+	tezosPath        string
+	octezNodeBinPath string
+}
+
+func newSnapshotExec(snapshotsPath, tezosPath, octezNodePath string) *SnapshotExec {
+	return &SnapshotExec{snapshotsPath, tezosPath, octezNodePath}
+}
+
+func (s *SnapshotExec) CreateSnapshot(historyMode snapshot.HistoryModeType) {
+	script := "mkdir -p " + s.snapshotsPath + " && cd " + s.snapshotsPath + " && " + s.octezNodeBinPath + " snapshot export --data-dir " + s.tezosPath
 
 	if historyMode == snapshot.ROLLING {
 		script = script + " --rolling"
 	}
 
-	_, _ = execScript(script)
+	_, _ = s.execScript(script)
 }
 
-func getSnapshotName(historyMode snapshot.HistoryModeType) (string, error) {
+func (s *SnapshotExec) GetSnapshotName(historyMode snapshot.HistoryModeType) (string, error) {
 	log.Println("Getting snapshot names.")
-	script := "mkdir -p /var/run/tezos/snapshots && cd /var/run/tezos/snapshots && /bin/ls -1a"
-	stdout, _ := execScript(script)
+	script := "mkdir -p " + s.snapshotsPath + " && cd " + s.snapshotsPath + " && /bin/ls -1a"
+	stdout, _ := s.execScript(script)
 
 	snapshotfilenames := strings.Split(stdout.String(), "\n")
 	log.Printf("All files found: %v \n", snapshotfilenames)
@@ -38,15 +48,21 @@ func getSnapshotName(historyMode snapshot.HistoryModeType) (string, error) {
 	return "", fmt.Errorf("Snapshot file not found.")
 }
 
-func getSnapshotHeaderOutput(filepath string) string {
+func (s *SnapshotExec) GetSnapshotHeaderOutput(filepath string) string {
 	log.Printf("Getting snapshot header output for file: %q. \n", filepath)
-	script := "/usr/local/bin/octez-node snapshot info --json /var/run/tezos/snapshots/" + filepath
-	stdout, _ := execScript(script)
+	script := s.octezNodeBinPath + " snapshot info --json " + s.snapshotsPath + "/" + filepath
+	stdout, _ := s.execScript(script)
 	log.Printf("Snapshot header output: %q. \n", stdout.String())
 	return stdout.String()
 }
 
-func execScript(script string) (bytes.Buffer, bytes.Buffer) {
+func (s *SnapshotExec) DeleteLocalSnapshots() {
+	log.Println("Deleting local snapshots.")
+	script := "rm -rf " + s.snapshotsPath + "/*"
+	_, _ = s.execScript(script)
+}
+
+func (s *SnapshotExec) execScript(script string) (bytes.Buffer, bytes.Buffer) {
 	cmd := exec.Command("sh", "-c", script)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

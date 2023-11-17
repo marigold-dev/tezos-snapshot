@@ -14,20 +14,25 @@ type SnapshotHeader struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type WrapperSnapshotHeader struct {
+	SnapshotHeader SnapshotHeader `json:"snapshot_header"`
+}
+
 func SnapshotHeaderFromJson(snapshotHeaderOutput string) (*SnapshotHeader, error) {
-	var snapshotHeader SnapshotHeader
+	var snapshotHeader WrapperSnapshotHeader
 	err := json.Unmarshal([]byte(snapshotHeaderOutput), &snapshotHeader)
 	if err != nil {
 		return nil, err
 	}
 
-	return &snapshotHeader, nil
+	return &snapshotHeader.SnapshotHeader, nil
 }
 
-// Example: TEZOS_MAINNET_2021-01-01_00-00 to mainnet
+// Example: TEZOS_ITHACANET_2022-01-25T15:00:00Z to ghostnet
+// Example: TEZOS_MAINNETrolling to mainnet
 func (s *SnapshotHeader) SanitizeChainame() string {
 	parts := strings.Split(s.ChaiName, "_")
-	chainName := strings.ToLower(parts[len(parts)-1])
+	chainName := strings.ToLower(parts[1])
 	if chainName == "ithacanet" {
 		chainName = "ghostnet"
 	}
