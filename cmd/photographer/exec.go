@@ -22,7 +22,7 @@ func NewSnapshotExec(snapshotsPath, octezNodePath, tezosPath string) *SnapshotEx
 
 func (s *SnapshotExec) CreateSnapshot(historyMode snapshot.HistoryModeType) {
 	log.Println("Creating snapshot.")
-	script := "mkdir -p " + s.snapshotsPath + " && cd " + s.snapshotsPath + " && " + s.octezNodeBinPath + " snapshot export --data-dir " + s.tezosPath
+	script := "mkdir -p " + s.snapshotsPath + " && cd " + s.snapshotsPath + " && " + s.octezNodeBinPath + " snapshot export --data-dir " + s.tezosPath + "/data"
 
 	if historyMode == snapshot.ROLLING {
 		script = script + " --rolling"
