@@ -40,7 +40,7 @@ func getSnapshotName(historyMode snapshot.HistoryModeType) (string, error) {
 
 func getSnapshotHeaderOutput(filepath string) string {
 	log.Printf("Getting snapshot header output for file: %q. \n", filepath)
-	script := "/usr/local/bin/octez-node snapshot info --json" + filepath
+	script := "/usr/local/bin/octez-node snapshot info --json /var/run/tezos/snapshots/" + filepath
 	stdout, _ := execScript(script)
 	log.Printf("Snapshot header output: %q. \n", stdout.String())
 	return stdout.String()
