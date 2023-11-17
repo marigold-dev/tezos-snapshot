@@ -2,7 +2,6 @@ package snapshot
 
 import (
 	"encoding/json"
-	"strings"
 )
 
 type SnapshotHeader struct {
@@ -26,15 +25,4 @@ func SnapshotHeaderFromJson(snapshotHeaderOutput string) (*SnapshotHeader, error
 	}
 
 	return &snapshotHeader.SnapshotHeader, nil
-}
-
-// Example: TEZOS_ITHACANET_2022-01-25T15:00:00Z to ghostnet
-// Example: TEZOS_MAINNETrolling to mainnet
-func (s *SnapshotHeader) SanitizeChainame() string {
-	parts := strings.Split(s.ChaiName, "_")
-	chainName := strings.ToLower(parts[1])
-	if chainName == "ithacanet" {
-		chainName = "ghostnet"
-	}
-	return chainName
 }

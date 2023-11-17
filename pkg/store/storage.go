@@ -142,7 +142,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			Filename:        filename,
 			Filesize:        util.FileSize(size),
 			FilesizeBytes:   size,
-			ChainName:       snapshotHeader.SanitizeChainame(),
+			ChainName:       snapshotHeader.ChaiName,
 			Date:            date,
 			BlockTimestamp:  snapshotHeader.Timestamp,
 			URL:             obj.MediaLink,
