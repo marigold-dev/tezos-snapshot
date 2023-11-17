@@ -83,10 +83,10 @@ func execute(ctx context.Context, snapshotStorage *store.SnapshotStorage, histor
 
 	createSnapshot(historyMode)
 	snapshotfilename, err := getSnapshotName(historyMode)
-	snapshotHeaderOutput := getSnapshotHeaderOutput(snapshotfilename)
-
 	if err != nil {
 		log.Fatalf("%v \n", err)
 	}
+	snapshotHeaderOutput := getSnapshotHeaderOutput(snapshotfilename)
+
 	snapshotStorage.EphemeralUpload(ctx, snapshotfilename, snapshotHeaderOutput)
 }
