@@ -71,7 +71,6 @@ func (s *SnapshotStorage) GetTodaySnapshotsItems(ctx context.Context) []snapshot
 }
 
 func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.SnapshotItem {
-
 	items := []snapshot.SnapshotItem{}
 	it := s.client.Bucket(s.bucketName).Objects(ctx, &storage.Query{})
 
@@ -98,8 +97,6 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 
 		size := obj.Size
 
-		filenameInfo := getInfoFromfilename(filename)
-
 		checksum := obj.Metadata["SHA256CHECKSUM"]
 		snapshotHeaderJson := obj.Metadata["SNAPSHOT_HEADER"]
 		versionJson, versionExist := obj.Metadata["VERSION"]
@@ -114,6 +111,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 		var snapshotHeader *snapshot.SnapshotHeader
 		if snapshotHeaderJson == "" {
 			// Handle old snapshots before the snapshot header was added
+			filenameInfo := getInfoFromfilename(filename)
 			snapshotVersion := 0
 			if version.Version.Major >= 16 && version.Version.Major <= 17 {
 				snapshotVersion = 5
@@ -142,7 +140,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			Filename:        filename,
 			Filesize:        util.FileSize(size),
 			FilesizeBytes:   size,
-			ChainName:       snapshotHeader.ChaiName,
+			ChainName:       RemoveTezosPrefix(snapshotHeader.ChaiName),
 			Date:            date,
 			BlockTimestamp:  snapshotHeader.Timestamp,
 			URL:             obj.MediaLink,
@@ -169,6 +167,13 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 	})
 
 	return items
+}
+
+func RemoveTezosPrefix(filename string) string {
+	if strings.HasPrefix(filename, "TEZOS_") {
+		return strings.ToLower(filename[6:])
+	}
+	return filename
 }
 
 func (s *SnapshotStorage) DeleteExpiredSnapshots(ctx context.Context, maxDays int, maxMonths int) {
