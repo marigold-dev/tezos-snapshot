@@ -2,6 +2,7 @@ package snapshot
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 type SnapshotHeader struct {
@@ -25,4 +26,23 @@ func SnapshotHeaderFromJson(snapshotHeaderOutput string) (*SnapshotHeader, error
 	}
 
 	return &snapshotHeader.SnapshotHeader, nil
+}
+
+func (s *SnapshotHeader) SanitizeChainName() string {
+	chainName := s.ChaiName
+	if strings.Contains(chainName, "_") {
+		chainName = strings.Split(chainName, "_")[1]
+	}
+
+	if strings.Contains(chainName, "-") {
+		chainName = strings.Split(chainName, "-")[0]
+	}
+
+	chainName = strings.ToLower(chainName)
+
+	if chainName == "ithacanet" {
+		chainName = "ghostnet"
+	}
+
+	return chainName
 }

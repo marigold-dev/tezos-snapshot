@@ -140,7 +140,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			Filename:        filename,
 			Filesize:        util.FileSize(size),
 			FilesizeBytes:   size,
-			ChainName:       RemoveTezosPrefix(snapshotHeader.ChaiName),
+			ChainName:       snapshotHeader.SanitizeChainName(),
 			Date:            date,
 			BlockTimestamp:  snapshotHeader.Timestamp,
 			URL:             obj.MediaLink,
@@ -167,13 +167,6 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 	})
 
 	return items
-}
-
-func RemoveTezosPrefix(filename string) string {
-	if strings.HasPrefix(filename, "TEZOS_") {
-		return strings.ToLower(filename[6:])
-	}
-	return filename
 }
 
 func (s *SnapshotStorage) DeleteExpiredSnapshots(ctx context.Context, maxDays int, maxMonths int) {
