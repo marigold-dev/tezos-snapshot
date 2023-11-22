@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -17,17 +16,6 @@ func main() {
 
 	goCache := cache.New(5*time.Minute, 10*time.Minute)
 	bucketName := os.Getenv("BUCKET_NAME")
-	timeout := time.Duration(5) * time.Second
-	transport := &http.Transport{
-		ResponseHeaderTimeout: timeout,
-		Dial: func(network, addr string) (net.Conn, error) {
-			return net.DialTimeout(network, addr, timeout)
-		},
-		DisableKeepAlives: true,
-	}
-	client := &http.Client{
-		Transport: transport,
-	}
 	e := echo.New()
 
 	// Middleware
@@ -47,7 +35,7 @@ func main() {
 				return err
 			}
 
-			return streamFile(c, client, snapshot.Filename, snapshot.URL)
+			return c.Redirect(http.StatusFound, snapshot.URL)
 		}
 	}
 	api := func(c echo.Context) error {
