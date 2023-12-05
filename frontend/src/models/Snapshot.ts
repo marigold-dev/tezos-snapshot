@@ -11,6 +11,7 @@ export type Snapshot = {
   block_hash: string
   sha256: string
   block_height: number
+  gs_uri: string
   url: string
   filesize: string
   filesize_bytes: number
