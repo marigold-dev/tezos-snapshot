@@ -136,6 +136,8 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			}
 		}
 
+		gsURI := "gs://" + s.bucketName + "/" + obj.Name
+
 		item := snapshot.SnapshotItem{
 			Filename:        filename,
 			Filesize:        util.FileSize(size),
@@ -143,6 +145,7 @@ func (s *SnapshotStorage) GetSnapshotItems(ctx context.Context) []snapshot.Snaps
 			ChainName:       snapshotHeader.SanitizeChainName(),
 			Date:            date,
 			BlockTimestamp:  snapshotHeader.Timestamp,
+			GSURI:           gsURI,
 			URL:             obj.MediaLink,
 			BlockHash:       snapshotHeader.BlockHash,
 			BlockHeight:     snapshotHeader.Level,

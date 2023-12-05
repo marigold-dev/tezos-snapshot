@@ -51,6 +51,7 @@ type SnapshotItem struct {
 	BlockHash       string          `json:"block_hash"`
 	BlockHeight     int             `json:"block_height"`
 	URL             string          `json:"url"`
+	GSURI           string          `json:"gs_uri"`
 	Filesize        string          `json:"filesize"`
 	SHA256          string          `json:"sha256"`
 	ArtifactType    ArtifactType    `json:"artifact_type"`
